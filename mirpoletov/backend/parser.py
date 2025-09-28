@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import datetime
 import re
 import logging
 
@@ -26,17 +27,18 @@ re_time = re.compile(time_pattern)
 
 class ParsedData:
     def __init__(self):
-        self.langd = -1000
+        self.longd = -1000
         self.latd = -1000
-        self.langa = -1000
+        self.longa = -1000
         self.lata = -1000
+        self.region = -1000
         self.datetimed = -1000
-        self.flight_time = -1000
+        self.flight_time_min = -1000
         self.sid = -1000
         self.b_type = -1000
 
     def __repr__(self):
-        return f"ParsedData object: sid: {self.sid}, b_type: {self.b_type}, datetime: {self.datetimed}, flight_time: {self.flight_time}, langd: {self.langd}, latd: {self.latd}, langa: {self.langa}, lata: {self.lata}"
+        return f"ParsedData object: sid: {self.sid}, b_type: {self.b_type}, datetime: {self.datetimed}, flight_time: {self.flight_time_min}, langd: {self.longd}, latd: {self.latd}, langa: {self.longa}, lata: {self.lata}"
 
 
 class ShrInfo:
@@ -131,7 +133,17 @@ def parse_shr(mes: str, info: ParserInfo, pos_start: int = -1):
         if pos_start == -1:
             logging.debug("Parsing shr: no start")
             return -1
+########
+    b_type = find_info_re(mes, re_b_type, "TYP/", pos_start, -1, 4, 14)
+    if not b_type or isinstance(b_type, int):
+        logging.debug("Parsing shr: invalid TYP/")
+        return -1
+    info.shr.b_type = b_type.group(2)
 
+    sid = find_info_re(mes, re_sid, "SID/", pos_start, -1, 4, -1)
+    if sid:
+        info.shr.sid = sid.group()
+########
     depature_start = mes.find("-", pos_start + 6)
     if depature_start == -1:
         logging.debug("Parsing shr: didn't find depature")
@@ -270,12 +282,13 @@ def parse_arr(mes: str, info: ParserInfo, pos_start: int):
     return 0
 
 
-def parse_row2025(row: list):
+def parse_row2025(row: list, wrong_lines_count: list[int]):
     """Парсит один ряд"""
     info = ParserInfo()
     found_shr = False
     found_dep = False
     found_arr = False
+    wrong_strings = 0
     logging.debug("Row: {}".format(row))
     for col in row:
         if not col: continue
@@ -294,6 +307,40 @@ def parse_row2025(row: list):
             logging.debug("Col arr: {}".format(col))
             ret = parse_arr(col, info, pos)
     logging.debug(info)
+    data = ParsedData()
+    ret = draw_info(info, data)
+    logging.debug(data)
+    if ret != 0:
+        wrong_lines_count[0] += 1
+        return -1
+        # logging.info(data.sid)
+    return data
+    
+
+def parse_long_lat(coordinates: str):
+    cur_pos = 0
+    while cur_pos < len(coordinates) and coordinates[cur_pos].isdecimal():
+        cur_pos += 1
+    if cur_pos == len(coordinates):
+        return -1
+    latitude = int(coordinates[:2]) + float("0." + coordinates[2:cur_pos])
+    if coordinates[cur_pos] in "NС":
+        pass
+    elif coordinates[cur_pos] in "SЮ":
+        latitude *= -1
+    else:
+        return -1
+
+    if len(coordinates) < cur_pos + 4:
+        return -1
+    longitude = int(coordinates[cur_pos+1 : cur_pos+4]) + float("0." + coordinates[cur_pos+4:-1])
+    if coordinates[-1] in "WЗ":
+        longitude *= -1
+    elif coordinates[-1] in "ВE":
+        pass
+    else:
+        return -1
+    return (longitude, latitude)
     
 def draw_info(info: ParserInfo, data: ParsedData):
     if info.shr.sid:
@@ -301,22 +348,120 @@ def draw_info(info: ParserInfo, data: ParsedData):
     elif info.dep.sid:
         data.sid = int(info.dep.sid)
     elif info.arr.sid:
-        data.sid = int(info.dep.sid)
+        data.sid = int(info.arr.sid)
     else:
         logging.debug("No sid")
         return -1
-
     
-        
+    parsed = 0
+    if info.dep.coord:
+        parsed = parse_long_lat(info.dep.coord)
+    elif info.shr.coordd:
+        parsed = parse_long_lat(info.shr.coordd)
+    if isinstance(parsed, int) and parsed == -1:
+        logging.debug("Drawing info: mistake in parsing coordinates depature")
+        return -1
+    if parsed:
+        data.longd = parsed[0]
+        data.latd = parsed[1]
+    
+    parsed = 0
+    if info.arr.coord:
+        parsed = parse_long_lat(info.arr.coord)
+    elif info.shr.coorda:
+        parsed = parse_long_lat(info.shr.coorda)
+    if isinstance(parsed, int) and parsed == -1:
+        logging.debug("Drawing info: mistake in parsing coordinates arrival")
+        return -1
+    if parsed:
+        data.longa = parsed[0]
+        data.lata = parsed[1]
+    
+    if (data.longa == -1000 or data.lata == -1000) and (data.longd == -1000 or data.latd == -1000):
+        logging.debug("Drawing info: not enough coords: skipping")
+        return -1
+    
+    if not info.shr.b_type:
+        logging.debug("Drawing info: no type or not supported type")
+        return -1
+    data.b_type = info.shr.b_type
+    if data.b_type == -1000:
+        logging.debug("Drawing info: no type or not supported type")
+        return -1
+
+    datetimed = 0
+    if info.dep.date:
+        dated = info.dep.date
+        if info.dep.time:
+            timed = info.dep.time
+        elif info.sha.timed:
+            timed = info.sha.timed
+        else:
+            logging.debug("Drawing info: no datetime")
+            return -1
+    elif info.shr.date:
+        dated = info.shr.date
+        if info.shr.timed:
+            timed = info.shr.timed
+        elif info.dep.timed:
+            timed = info.dep.time
+        else:
+            logging.debug("Drawing info: no datetime")
+            return -1
+    else:
+        logging.debug("Drawing info: no datetime")
+        return -1
+            
+    if not (dated.isdecimal() and len(dated) == 6):
+        return -1
+    if not (timed.isdecimal() and len(timed) == 4):
+        return -1
+    try: 
+        datetimed = datetime.datetime(year=int("20" + dated[:2]), month=int(dated[2:4]), day=int(dated[4:6]),
+                                      hour=int(timed[:2]), minute=int(timed[2:4]))
+    except:
+        logging.debug("Drawing info: not right datetimed")
+        return -1
+    
+    data.datetimed = datetimed
+
+    if info.arr.time and info.arr.date:
+        datea = info.arr.date
+        timea = info.arr.time
+        if not (datea.isdecimal() and len(datea) == 6) or not (timea.isdecimal() and len(timea) == 4):
+            return -1
+        try:
+            datetimea = datetime.datetime(year=int("20" + datea[:2]), month=int(datea[2:4]), day=int(datea[4:6]),
+                                          hour=int(timea[:2]), minute=int(timea[2:4]))
+            data.flight_time_min = (datetimea - data.datetimed).total_seconds() // 60
+        except:
+            logging.debug("Drawing info: not right datetimed")
+
+    elif info.shr.flight_time:
+        flight_time = info.shr.flight_time
+        if not (flight_time.isdecimal() and len(flight_time) == 4):
+            return -1
+        data.flight_time_min = int(flight_time[:2]) * 60 + int(flight_time[2:])
+
+    if data.flight_time_min == -1000:
+        logging.debug("Drawing info: no right flight_time")
+
+    return 0
 
 def parse_rows(rows: list[list[str]]):
     start = time.time()
     # print(rows)
     # print(len(rows))
+    wrong_lines_count = [0]
+    parsed_data = []
     for row in rows:
-        parse_row2025(row)
+        data = parse_row2025(row, wrong_lines_count)
+        if not isinstance(data, int) or data == 0:
+            parsed_data.append(data)
     finish = time.time()
     logging.info("Parsing rows: {} sec. Average per row: {} sec.".format(finish - start, (finish - start)/len(rows)))
+    logging.info("Parsing rows: {} wrong lines".format(wrong_lines_count[0]))
+    return parsed_data
 
                  
 if __name__ == "__main__":
