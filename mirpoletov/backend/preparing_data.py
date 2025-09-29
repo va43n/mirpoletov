@@ -102,6 +102,17 @@ def find_duplicates(completed_data: list, data_from_db: list, resulting_data: li
     logging.info("Finding duplicates: self: {} sec.".format(time.time() - start_self))
     logging.info("Finding duplicates: dup: {}, self: {}".format(duplicated, self_duplicated))
     return (duplicated, self_duplicated)
+
+def get_parsed_by_datetime_data(completed_data: list, result_data: list, min_datetime, max_datetime):
+    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime):
+        logging.info("Parsing by datetime: some values are not of thought types")
+        return -1
+    not_in_datetime = 0
+    
+    completed_data.sort(key=lambda x: x.datetimed)
+
+    left_index = bisect_left(completed_data
+    
             
     
 if __name__ == "__main__":

@@ -71,6 +71,13 @@ def insert_data_db(completed_data: list, conn):
         return count
 
 def select_data_db(conn, datetime_min, datetime_max, regions, need_sid=False):
+    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime) or not isinstance(need_sid, bool):
+        logging.info("Selecting fields: some values are not of thought types")
+        return -1
+    for region in regions:
+        if not isinstance(region, int):
+            logging.info("Selecting fileds: one of modules if not integer")
+            return -1
     cur = conn.cursor()
     start = time.time()
     if need_sid:
@@ -78,7 +85,7 @@ def select_data_db(conn, datetime_min, datetime_max, regions, need_sid=False):
     else:
         select_sqlstring = "SELECT region, datetime_dep, flight_time_min FROM flights WHERE (datetime_dep between %s and %s) and (region = ANY(%s));"
     
-    data = []
+    data = -1
     try:
         cur.execute(select_sqlstring, (datetime_min, datetime_max, regions))
         logging.info("Selecting flights: in {} sec.".format(time.time() - start))
@@ -114,6 +121,8 @@ if __name__ == "__main__":
         logging.info("Inserting flights: got {} inserted".format(count))
 
         data = select_data_db(conn, datetime.datetime.today() - datetime.timedelta(days=90), datetime.datetime.today(), [0, 5, 77], need_sid=True)
+        if isinstance(data, int) and data == -1:
+            exit(-1)
         logging.info("Selecting flights: got {} rows".format(len(data)))
         logging.info(data[:5])
     # print(len(data))
