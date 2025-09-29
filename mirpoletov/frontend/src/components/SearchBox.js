@@ -1,8 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { REGIONS_DICTIONARY } from "../constants/regions";
 import "./SearchBox.css";
 
-const SearchBox = ({ onRegionSelect }) => {
+const SearchBox = ({ onRegionSelect, data = {} }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -23,7 +22,7 @@ const SearchBox = ({ onRegionSelect }) => {
     if (!searchTerm.trim()) return [];
     
     const term = searchTerm.toLowerCase();
-    return Object.values(REGIONS_DICTIONARY)
+    return Object.values(data)
       .filter(region => 
         region.name.toLowerCase().includes(term)
       )
@@ -37,7 +36,7 @@ const SearchBox = ({ onRegionSelect }) => {
   };
 
   const handleRegionSelect = (region) => {
-    setSearchTerm(region.name);
+    setSearchTerm("");
     setIsDropdownOpen(false);
     setSelectedIndex(-1);
     onRegionSelect(region.id);
