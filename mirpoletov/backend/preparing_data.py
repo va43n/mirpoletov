@@ -3,13 +3,13 @@ import os
 import time
 import logging
 import uuid
+from bisect import bisect_left
 
 import geopandas as gpd
 from shapely.geometry import Point
 import psycopg as pg
 import numpy as np
 
-from db_work import open_regions
 from parser import read_excel_calamine, parse_rows
 
 
@@ -59,28 +59,64 @@ def compute_regions_types(parsed_data: list, regions, types: dict, completed_dat
     logging.info("Completing data: completed last step: {} sec.".format(time.time() - join_time))
     return wrong_data
 
+def binary_search(a, x, lo=0, hi=None, key=None):
+    if hi is None: hi = len(a)
+    pos = bisect_left(a, x, lo, hi, key=key)                 
+    return pos if pos != hi and key(a[pos]) == x else -1  
 
-def insert_data_bd(completed_data: list, conn):
-    cur = conn.cursor()
-    start = time.time()
-    tupled_data = [(uuid.uuid4(), data.sid, data.datetimed, data.flight_time_min, data.b_type, data.region, data.longd, data.latd, data.longa, data.lata) for data in completed_data]
-    formatted_data_time = time.time()
-    logging.info("Inserting flights: made tuples: {} sec.".format(formatted_data_time - start))
-    insert_sqlstring = """INSERT INTO flights (id, sid, datetime_dep, flight_time_min, type, region, longitude_dep, latitude_dep, longitude_arr, latitude_arr) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (sid) DO NOTHING;"""
-    count = -1
-    try:
-        cur.executemany(insert_sqlstring, tupled_data)
-        count = cut.rowcount
-        logging.info("Inserting flights: inserted rows: {} sec., {} failed".format(time.time() - formatted_data_time, len(completed_data) - count))
-        conn.commit()
-    except Exception as e:
-        logging.info("Inserting flights: trouble occured while inserting: {}".format(e))
-        conn.rollback()
-    finally:
-        cur.close()
-    return count
+def find_duplicates(completed_data: list, data_from_db: list, resulting_data: list):
+    duplicated = 0
+    mid_result = []
+    if data_from_db:
+        start_db = time.time()
+        for data in completed_data:
+            # cur_duplicated = 0
+            if binary_search(data_from_db, data.sid, key=lambda x: x[0]) == -1:
+                # for res_data in resulting_data:
+                #if res_data.sid == data.sid:
+                       # duplicated += 1
+                        #cur_duplicated = 1
+                        #break
+                #if cur_duplicated != 1:
+                mid_result.append(data)
+            else:
+                duplicated += 1
+        logging.info("Finding duplicates: db: {} sec.".format(time.time() - start_db))
+    else: mid_result = completed_data
+    start_self = time.time()
+    mid_result.sort(key=lambda x: x.sid)
+    self_duplicated = 0
+    for i, data in enumerate(mid_result):
+        if binary_search(resulting_data, data.sid, key=lambda x: x.sid) == -1:
+            resulting_data.append(data)
+
+        #cur_duplicated = 0
+        #for res_data in resulting_data:
+        #    if data.sid == res_data.sid:
+        #        cur_duplicated = 1
+        #        break
+        #if cur_duplicated:
+        #    seld_duplicated += 1
+        else:
+            self_duplicated += 1
+    logging.info("Finding duplicates: self: {} sec.".format(time.time() - start_self))
+    logging.info("Finding duplicates: dup: {}, self: {}".format(duplicated, self_duplicated))
+    return (duplicated, self_duplicated)
+
+def get_parsed_by_datetime_data(completed_data: list, result_data: list, min_datetime, max_datetime):
+    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime):
+        logging.info("Parsing by datetime: some values are not of thought types")
+        return -1
+    not_in_datetime = 0
+    
+    completed_data.sort(key=lambda x: x.datetimed)
+
+    left_index = bisect_left(completed_data
+    
+            
     
 if __name__ == "__main__":
+    from db_work import open_regions
     logging.basicConfig(level=logging.INFO)
     regions = open_regions()
     types = {"BLA": 0, "SHAR": 2, "AER": 1}
