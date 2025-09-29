@@ -1,5 +1,6 @@
 :root {
   --map-height: 500px;
+  --standard-button-size: 200px;
 }
 
 *, *::before, *::after {
@@ -13,14 +14,8 @@
 body {
   background-color: #f3f3f3;
   scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-html {
-  overflow: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
 html::-webkit-scrollbar {
   display: none;
 }
@@ -34,7 +29,6 @@ header {
   border-radius: 0px 0px 12px 12px;
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  
 }
 
 .app-header {
@@ -62,14 +56,14 @@ header {
 }
 
 .header-pos-change-button-text {
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
   color: rgb(42, 77, 107);
   font-size: 12px;
 }
 
 button {
-  width: 200px;
-  height: 50px;
+  width: var(--standard-button-size);
+  min-height: min(50px, calc(var(--standard-button-size) / 4));
   border: none;
   border-radius: 12px;
   padding: 12px 24px;
@@ -122,15 +116,16 @@ button:active {
 .map-container {
   display: flex;
   text-align: center;
+  justify-content: space-evenly;
   height: var(--map-height);
   margin: 0 auto;
   gap: 30px;
-  padding: 20px;
+  padding: 0px 24px;
 }
 
 .map-container svg {
-  width: 100%;
   height: 100%;
+  padding: 24px 0px;
 }
 
 .region {
@@ -151,7 +146,28 @@ button:active {
 
 .controls-container {
   display: flex;
+  align-items: center;
   flex-direction: column;
+  justify-content: space-evenly;
+  gap: 15px;
+}
+
+.controls-container-col {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+.controls-container-row {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 15px;
@@ -160,7 +176,6 @@ button:active {
 .all-info-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .info-container {
@@ -174,13 +189,82 @@ button:active {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
   gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.info-title {
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+.info-subtitle {
+  font-weight: normal;
+  text-align: left;
 }
 
 .info-text {
+  font-weight: normal;
   text-align: justify;
 }
 
 .no-input {
+  font-weight: normal;
   font-style: italic;
   text-align: center;
+}
+
+.region-tooltip {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(102, 102, 102, 0.8);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 11;
+  word-break: break-word;
+  width: var(--standard-button-size);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transform: translate(0%, -100%);
+}
+
+b {
+  font-weight: 600;
+}
+
+@media (orientation: portrait), (max-width: 960px) {
+  :root {
+    --standard-button-size: min(40vw, 40vw);
+  }
+
+  header {
+    width: 100vw;
+    left: 0;
+  }
+
+  .map-container {
+    padding: 12px 0;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .map-container::-webkit-scrollbar {
+    width: 0;
+  }
+
+  .map-container svg {
+    min-height: 400px;
+    padding: 0;
+  }
+
+  .info-container {
+    width: 100vw;
+  }
+
+  .controls-container-col {
+    padding: 12px;
+  }
+
+  .region-tooltip {
+    display: none;
+  }
 }

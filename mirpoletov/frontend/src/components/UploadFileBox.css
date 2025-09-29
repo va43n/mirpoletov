@@ -1,0 +1,37 @@
+.file-upload-container {
+  width: 100%;
+  max-width: var(--standard-button-size);
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 12px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.upload-area:hover {
+  border-color: rgb(42, 77, 107);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 77, 107, 0.4);
+}
+
+.upload-area.dragging {
+  border-color: rgb(42, 77, 107);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 77, 107, 0.4);
+}
+
+.upload-placeholder p {
+  color: #666;
+  font-weight: 600;
+}
+
+.file-info {
+  font-weight: 600;
+  color: #666;
+  word-break: break-word;
+}

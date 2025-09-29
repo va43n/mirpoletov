@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
 import "./App.css";
+
 import SearchBox from "./components/SearchBox";
-import ChoicesBox from "./components/ChoiceBox";
+import ChoicesBox from "./components/ChoicesBox";
+import UploadFileBox from "./components/UploadFileBox";
+import DateTimePicker from "./components/DateTimePicker";
+import ErrorWindow from "./components/ErrorWindow";
+
 import { REGIONS_DICTIONARY } from "./constants/regions";
 import { METRICS_DICTIONARY } from "./constants/metrics";
 import { SETTINGS_DICTIONARY } from "./constants/settings";
@@ -12,8 +18,48 @@ function App() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
   const [regions, setRegions] = useState([]);
-  const [selectedChoices, setSelectedChoices] = useState([]);
+
+  const [uploadedData, setUploadedData] = useState(null);
+  const fileExtentions = ".xlsx,.csv";
+
+  const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [selectedSettings, setSelectedSettings] = useState([]);
+
+  const [tooltip, setTooltip] = useState({ show: false, text: "", x: 0, y: 0 });
+
+  const settingsChoicesRef = useRef(null);
+
+  const [selectedDateTime1, setSelectedDateTime1] = useState("");
+  const [selectedDateTime2, setSelectedDateTime2] = useState("");
+
+  const [isErrorWindowOpen, setIsErrorWindowOpen] = useState(false);
+  const [errorText, setErrorWindowText] = useState("");
+
+  const showErrorWindow = (message) => {
+    setErrorWindowText(message);
+    setIsErrorWindowOpen(true);
+  };
+
+  const handleRegionMouseMove = (event) => {
+    const title = event.target.getAttribute("data-title") || "n/a";
+    if (title !== "n/a") {
+      setTooltip({
+        show: true,
+        text: title,
+        x: event.clientX,
+        y: event.clientY
+      });
+    }
+    else {
+      if (tooltip.show === true)
+        setTooltip({show: false});
+    }
+  };
+
+  const handleRegionMouseLeave = (event) => {
+    if (tooltip.show === true)
+      setTooltip({show: false});
+  }
 
   useEffect(() => {
     document.title = "Мир полетов";
@@ -40,6 +86,7 @@ function App() {
     });
   };
 
+  // Потом убрать
   const handleClick = async () => {
     try {
       const response = await fetch("https://mirpoletov.ru:8000/api/button-click");
@@ -70,6 +117,15 @@ function App() {
     }
   };
 
+  const handleFileUpload = (file) => {
+    setUploadedData(file);
+    settingsChoicesRef.current?.selectItem("file");
+  };
+
+  const handleWrongFileUpload = () => {
+    showErrorWindow(`Вы попытались загрузить файл с недопустимым расширением. Для загрузки данных о полетах используются следующие расширения файлов: ${fileExtentions}.`);
+  }
+
   const handleSearchSelect = (regionId) => {
     const region = REGIONS_DICTIONARY[regionId];
     if (region) {
@@ -87,7 +143,7 @@ function App() {
   };
 
   const handleChoicesChange = (choices) => {
-    setSelectedChoices(choices);
+    setSelectedMetrics(choices);
   };
 
   const handleSettingsChange = (settings) => {
@@ -95,7 +151,68 @@ function App() {
   };
 
   const HandleCalculate = () => {
-    console.log(regions, selectedChoices, selectedSettings);
+    const [date1, time1] = selectedDateTime1.split(" ");
+    if ((date1 && time1) === undefined) {
+      showErrorWindow(`Во временной метке начала не соблюден формат даты и времени "ДД.ММ.ГГГГ ЧЧ.ММ". Для решения проблемы попробуйте перезагрузить страницу.`);
+      return;
+    }
+
+    const [date2, time2] = selectedDateTime2.split(" ");
+    if ((date2 && time2) === undefined) {
+      showErrorWindow(`Во временной метке конца не соблюден формат даты и времени "ДД.ММ.ГГГГ ЧЧ.ММ". Для решения проблемы попробуйте перезагрузить страницу.`);
+      return;
+    }
+
+    const [day1, month1, year1] = date1.split(".").map(item => parseInt(item));
+    const [hour1, minute1] = time1.split(":").map(item => parseInt(item));
+    if ((day1 && month1 && year1 && hour1 && minute1) === (NaN || undefined)) {
+      showErrorWindow(`Во временной метке начала не соблюден формат даты и времени "ДД.ММ.ГГГГ ЧЧ.ММ". Для решения проблемы попробуйте перезагрузить страницу.`);
+      return;
+    }
+
+    const [day2, month2, year2] = date2.split(".").map(item => parseInt(item));
+    const [hour2, minute2] = time2.split(":").map(item => parseInt(item));
+    if ((day2 && month2 && year2 && hour2 && minute2) === (NaN || undefined)) {
+      showErrorWindow(`Во временной метке конца не соблюден формат даты и времени "ДД.ММ.ГГГГ ЧЧ.ММ". Для решения проблемы попробуйте перезагрузить страницу.`);
+      return;
+    }
+
+    if (year1 > year2) {
+      showErrorWindow(`Временная метка начала больше временной метки конца. Убедитесь в правильности ввода меток, чтобы произвести рассчет.`);
+      return;
+    }
+    if (month1 > month2) {
+      showErrorWindow(`Временная метка начала больше временной метки конца. Убедитесь в правильности ввода меток, чтобы произвести рассчет.`);
+      return;
+    }
+    if (day1 > day2) {
+      showErrorWindow(`Временная метка начала больше временной метки конца. Убедитесь в правильности ввода меток, чтобы произвести рассчет.`);
+      return;
+    }
+    if (hour1 > hour2) {
+      showErrorWindow(`Временная метка начала больше временной метки конца. Убедитесь в правильности ввода меток, чтобы произвести рассчет.`);
+      return;
+    }
+    if (minute1 > minute2) {
+      showErrorWindow(`Временная метка начала больше временной метки конца. Убедитесь в правильности ввода меток, чтобы произвести рассчет.`);
+      return;
+    }
+
+    if (!uploadedData && selectedSettings.includes("file"))
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно выбрав функцию использования файла в настройках, но при этом не прикрепили файл с данными. Загрузите файл в соответствующее поле или отмените использование файла в настройках, чтобы произвести рассчет.`);
+    else if (regions.length === 0 && !uploadedData)
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав регионы для обработки. Выберите один или несколько регионов с помощью интерактивной карты или поля поиска, или же загрузите файл с данными в соответствующее поле, чтобы произвести рассчет.`);
+    else if (selectedMetrics.length === 0)
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав ни одной метрики, по которой будут обрабатываться данные. Выберите одну или несколько метрик в соответствующем выпадающем списке, чтобы произвести рассчет.`);
+    else {
+      console.log(regions,
+                  selectedMetrics,
+                  selectedSettings,
+                  uploadedData,
+                  {day: day1, month: month1, year: year1, hour: hour1, minute: minute1},
+                  {day: day2, month: month2, year: year2, hour: hour2, minute: minute2}
+      );
+    }
   };
 
   const HandleHeaderPositionChange = () => {
@@ -107,7 +224,9 @@ function App() {
       <header className={`app-header ${isHeaderVisible ? "header-visible" : "header-hidden"}`}>
         <div className="map-container">
           <svg
-            onClick={handleRegionClick} 
+            onClick={handleRegionClick}
+            onMouseMove={handleRegionMouseMove}
+            onMouseLeave={handleRegionMouseLeave}
             x="0px" y="0px" viewBox="0 0 1000 600"> 
             <path className="region" fill="#a0d2ff" d="m 130.24729,259.26463 -0.71301,-1.3323 -0.83965,1.13893 -1.20312,0.61639 -0.3652,1.98343 -2.7566,-1.20341 -1.29507,1.2557 -1.79887,-1.96928 -0.51738,2.08913 -1.70104,0.51357 0.48353,2.36036 1.41813,-1.06374 1.07846,1.34199 2.31013,-0.11587 0.63117,-1.4221 0.77636,1.28888 1.63087,-0.86752 1.60105,1.08107 2.52028,-0.21377 0.38854,-1.63667 -0.76508,-2.45949 0.30997,-0.96605 c -0.75062,0.0982 -0.83803,-0.13605 -1.19347,-0.41925 z" data-title="Москва" data-code="RU-MOW"></path>
             <path className="region" fill="#a0d2ff" d="m 136.30673,181.67516 -2.95955,-0.98651 -3.94605,0.98651 -0.98652,3.94606 0.98652,2.95954 3.94605,1.97303 2.95955,-1.97303 1.97302,-2.95954 -1.97302,-3.94606 z" data-title="Санкт-Петербург" data-code="RU-SPE"></path>
@@ -201,12 +320,25 @@ function App() {
           </svg>
 
           <div className="controls-container">
-            <button onClick={addAll}>Выделить все</button>
-            <button onClick={clearAll}>Убрать выделение</button>
-            <SearchBox onRegionSelect={handleSearchSelect} />
-            <ChoicesBox data={METRICS_DICTIONARY} title="Метрики" onSelectionChange={handleChoicesChange} />
-            <ChoicesBox data={SETTINGS_DICTIONARY} title="Настройки" onSelectionChange={handleSettingsChange} />
-            <button className="calculateButton" onClick={HandleCalculate}>Рассчитать</button>
+            <div className="controls-container-row">
+              <div className="controls-container-col">
+                <p className="info-title">Данные</p>
+                <UploadFileBox onFileUpload={handleFileUpload} onWrongFileUpload={handleWrongFileUpload} acceptedTypes={fileExtentions} />
+                <button onClick={addAll}>Выделить все</button>
+                <button onClick={clearAll}>Убрать выделение</button>
+                <SearchBox data={REGIONS_DICTIONARY} onRegionSelect={handleSearchSelect} />
+              </div>
+              <div className="controls-container-col">
+                <p className="info-title">Настройки</p>
+                <DateTimePicker value={selectedDateTime1} onChange={setSelectedDateTime1} title="Временная метка начала" placeholder="ДД.ММ.ГГГГ ЧЧ:ММ" showTime={true}/>
+                <DateTimePicker value={selectedDateTime2} onChange={setSelectedDateTime2} title="Временная метка конца" placeholder="ДД.ММ.ГГГГ ЧЧ:ММ" showTime={true}/>
+                <ChoicesBox data={METRICS_DICTIONARY} title="Метрики" onSelectionChange={handleChoicesChange} />
+                <ChoicesBox ref={settingsChoicesRef} data={SETTINGS_DICTIONARY} title="Настройки" onSelectionChange={handleSettingsChange} />
+              </div>
+            </div>
+            <div className="controls-container-row">
+              <button className="calculateButton" onClick={HandleCalculate}>Рассчитать</button>
+            </div>
           </div>
         </div>
       </header>
@@ -215,53 +347,84 @@ function App() {
         <span className={`header-pos-change-button-text ${isHeaderVisible ? "rotated" : ""}`}>{isHeaderVisible ? "Свернуть" : "Открыть"}</span>
       </button>
 
+      {tooltip.show && (
+        <div 
+          className="region-tooltip"
+          style={{left: tooltip.x, top: tooltip.y}}>
+          {tooltip.text}
+        </div>
+      )}
+
       <div className="all-info-container">
         <div className="info-container">
-          <h3>Выбранные регионы: </h3>
-          {regions.length > 0 ? (
-            <p className="info-text">
-              {regions.map((region, index) => (
-                <span key={index}>
-                  {REGIONS_DICTIONARY[region].name}
-                  {index < regions.length - 1 ? ", " : "."}
-                </span>
-              ))}
-            </p>
+          <p className="info-title">Выбранные регионы: </p>
+          {selectedSettings.includes("file") ? (
+            <p className="no-input">Выбран режим загрузки из файла</p>
           ) : (
-            <p className="no-input">Не выбрано ни одного региона</p>
+            <div>
+              {regions.length > 0 ? (
+                <p className="info-text">
+                  {regions.map((region, index) => (
+                    <span key={index}>
+                      {REGIONS_DICTIONARY[region].name}
+                      {index < regions.length - 1 ? ", " : "."}
+                    </span>
+                  ))}
+                </p>
+              ) : (
+                <p className="no-input">Не выбрано ни одного региона</p>
+              )}
+            </div>
           )}
         </div>
         <div className="info-container">
-          <h3>Выбранные метрики: </h3>
-          {selectedChoices.length > 0 ? (
-            <p className="info-text">
-              {selectedChoices.map((metric, index) => (
-                <span key={index}>
-                  {METRICS_DICTIONARY[metric].name}
-                  {index < selectedChoices.length - 1 ? ", " : "."}
-                </span>
-              ))}
-            </p>
-          ) : (
-            <p className="no-input">Не выбрано ни одной метрики</p>
-          )}
-        </div>
-        <div className="info-container">
-          <h3>Выбранные дополнительные настройки: </h3>
-          {selectedSettings.length > 0 ? (
-            <p className="info-text">
-              {selectedSettings.map((setting, index) => (
-                <span key={index}>
-                  {SETTINGS_DICTIONARY[setting].name}
-                  {index < selectedSettings.length - 1 ? ", " : "."}
-                </span>
-              ))}
-            </p>
-          ) : (
-            <p className="no-input">Не выбрано ни одной настройки</p>
-          )}
+          <p className="info-title">Выбранные настройки: </p>
+          <div>
+            <div className="info-subtitle"><b>Временнные метки:</b>{" "}
+            {selectedDateTime1 && selectedDateTime2 && (
+            <span className="selected-info">
+              от {selectedDateTime1} до {selectedDateTime2}.
+            </span>
+            )}</div>
+          </div>
+          <div>
+            <div className="info-subtitle"><b>Метрики</b>:{" "}
+            {selectedMetrics.length > 0 ? (
+              <span className="info-text">
+                {selectedMetrics.map((metric, index) => (
+                  <span key={index}>
+                    {METRICS_DICTIONARY[metric].name}
+                    {index < selectedMetrics.length - 1 ? ", " : "."}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="no-input">Не выбрано ни одной метрики</span>
+            )}</div>
+          </div>
+          <div>
+            <div className="info-subtitle"><b>Дополнительные настройки:</b>{" "}
+              {selectedSettings.length > 0 ? (
+              <span className="info-text">
+                {selectedSettings.map((setting, index) => (
+                  <span key={index}>
+                    {SETTINGS_DICTIONARY[setting].name}
+                    {index < selectedSettings.length - 1 ? ", " : "."}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="no-input">Не выбрано ни одной настройки</span>
+            )}</div>
+          </div>
         </div>
       </div>
+
+      <ErrorWindow
+        isOpen={isErrorWindowOpen}
+        onClose={() => setIsErrorWindowOpen(false)}
+        message={errorText}
+      />
 
       <button onClick={handleClick}>Нажми на меня</button>
       {serverResponse && <p className="info-text">Ответ сервера: <strong>{serverResponse}</strong></p>}

@@ -1,0 +1,142 @@
+.choices-dropdown-container {
+  position: relative;
+  width: var(--standard-button-size);
+}
+
+.choices-dropdown-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid rgb(42, 77, 107);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.choices-dropdown-field:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 77, 107, 0.4);
+}
+
+.choices-display-text {
+  color: #666;
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+  color: rgb(42, 77, 107);
+  font-size: 12px;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.choices-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid rgb(42, 77, 107);
+  border-radius: 12px;
+  margin-top: 5px;
+  box-shadow: 0 6px 20px rgba(42, 77, 107, 0.4);
+  z-index: 9;
+  height: 300px;
+  overflow-y: auto;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.choice-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #d1d1d1;
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.choice-item:last-child {
+  border-bottom: none;
+}
+
+.choice-item:hover {
+  background: #d6d6d6;
+}
+
+.choice-item.selected {
+  background: #a0d2ff;
+}
+
+.choice-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #666;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.checkbox.checked {
+  background: rgb(42, 77, 107);
+  border-color: rgb(42, 77, 107);
+  color: #a0d2ff;
+}
+
+.choice-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.choice-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.choice-description {
+  font-size: 12px;
+  color: #666;
+}
+
+.choices-dropdown-menu::-webkit-scrollbar {
+  width: 0;
+}
+
+@media (orientation: portrait), (max-width: 960px) {
+  .choices-dropdown-menu {
+    position: fixed;
+    width: 50vw;
+    left: 25vw;
+    top: 10vh;
+  }
+}
