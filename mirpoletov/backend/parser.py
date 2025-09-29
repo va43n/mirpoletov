@@ -443,8 +443,9 @@ def draw_info(info: ParserInfo, data: ParsedData):
             return -1
         data.flight_time_min = int(flight_time[:2]) * 60 + int(flight_time[2:])
 
-    if data.flight_time_min == -1000:
+    if data.flight_time_min == -1000 or data.flight_time_min < 0:
         logging.debug("Drawing info: no right flight_time")
+        return -1
 
     return 0
 
@@ -465,7 +466,7 @@ def parse_rows(rows: list[list[str]]):
 
                  
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     row_number = None
     start_row = None
     end_row = None
