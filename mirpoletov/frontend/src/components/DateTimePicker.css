@@ -190,8 +190,8 @@
 @media (orientation: portrait), (max-width: 960px) {
   .datetime-dropdown {
     position: fixed;
-    width: 50vw;
-    left: 25vw;
-    top: 10vh;
+    width: 70vw;
+    left: 15vw;
+    top: 2vh;
   }
 }
