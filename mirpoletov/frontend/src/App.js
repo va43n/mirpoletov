@@ -244,11 +244,10 @@ function App() {
         body: formData
       });
 
+      const result = await response.json();
       if (!response.ok) {
         throw new Error("Ошибка сервера");
       }
-
-      const result = await response.json();
       console.log("Результат:", result);
 
     } catch (error) {
