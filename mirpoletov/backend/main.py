@@ -17,7 +17,7 @@ app.add_middleware(
 @app.post("/api/calculate")
 async def calculate_client_input(
         data: str = Form(...),
-        file: Optional[UploadFile] = File(None)
+        uploadedData: Optional[UploadFile] = File(None)
     ):
     request_data = json.loads(data)
     
@@ -26,13 +26,12 @@ async def calculate_client_input(
     settings = request_data.get('settings', [])
     timestamp1 = request_data.get('timestamp1', {})
     timestamp2 = request_data.get('timestamp2', {})
-    uploadedFile = request_data.get('uploadedFile', None)
 
-    print(data, uploadedFile)
+    print(data, uploadedData)
 
     print("Пришли данные:", regions, metrics, settings, timestamp1, timestamp2)
 
-    if uploadedFile:
+    if uploadedData:
         print("Даже есть какой-то файл")
 
     return {
