@@ -71,7 +71,7 @@ def insert_data_db(completed_data: list, conn):
         return count
 
 def select_data_db(conn, datetime_min, datetime_max, regions, need_sid=False):
-    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime.datetime) or not isinstance(need_sid, bool) or not datetime_min < datetime_max:
+    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime.datetime) or not isinstance(need_sid, bool) or not datetime_min <= datetime_max:
         logging.info("Selecting fields: some values are not of thought types")
         return -1
     for region in regions:

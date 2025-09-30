@@ -60,6 +60,24 @@ def compute_regions_types(parsed_data: list, regions, types: dict, completed_dat
     logging.info("Completing data: completed last step: {} sec.".format(time.time() - join_time))
     return wrong_data
 
+def find_minmax_datetime(all_data: list):
+    if not isinstance(all_data, list) or len(all_data) == 0:
+        logging.info("Finding minmax: wrong types")
+        return -1
+    if not isinstance(all_data[0], ParsedData):
+        logging.info("Finding minmax: wrong data")
+        return -1
+    min_datetime = max_datetime = all_data[0].datetimed
+    for data in all_data[1:]:
+        if not isinstance(data, ParsedData):
+            logging.info("Finding minmax: wrong data")
+            return -1
+        if data.datetimed > max_datetime:
+            max_datetime = data.datetimed
+        elif data.datetimed < max_datetime:
+            min_datetime = data.datetimed
+    return (min_datetime, max_datetime)
+
 def binary_search(a, x, lo=0, hi=None, key=None):
     if hi is None: hi = len(a)
     pos = bisect_left(a, x, lo, hi, key=key)                 
@@ -146,6 +164,22 @@ def make_regions_dict(all_data: list, regions: list, regions_dict: dict):
     logging.info("Making regions dict: done in {} sec.".format(time.time() - start))
     return summ_len
 
+### Добавить обработку ошибоа
+def translate_to_abbrs_dict(regions_dict: dict, regions):
+    if not isinstance(regions_dict, dict):
+        logging.info("Translating regions dict: got wrong data type")
+        return -1
+    data_codes = regions["data_code"]
+    new_dict = {}
+    for region in regions_dict:
+        new_dict[data_codes[region]] = regions_dict[region]
+    
+    regions_dict.clear()
+    for key in new_dict:
+        regions_dict[key] = new_dict[key]
+    return 0
+###
+
 def make_db_data_into_data(all_data: list, db_data: list):
     if not isinstance(all_data, list) or not isinstance(db_data, list):
         logging.info("Making db_data in data: got wrong type")
@@ -156,7 +190,7 @@ def make_db_data_into_data(all_data: list, db_data: list):
         data.sid = db_row[0]
         data.datetimed = db_row[2]
         data.flight_time_min = db_row[3]
-        data.region = db_ros[1]
+        data.region = db_row[1]
         all_data.append(data)
     logging.info("Making db_data in data: done in {} sec.".format(time.time() - start))
     return 0
@@ -194,7 +228,7 @@ def turn_abbrs_to_regions(abbrs: list, regions, list_regions: list):
             wrong += 1
     logging.info("Turn abbrs to regions: done in {} sec.".format(time.time() - start))
     return wrong
-            
+
     
 if __name__ == "__main__":
     from db_work import open_regions

@@ -72,7 +72,7 @@ def process_days_dict(all_data, days, min_day_datetime, max_datetime):
         else:
             end_day = (data.datetimed - min_day_datetime + datetime.timedelta(minutes=data.flight_time_min)).days + 1
         days[start_day] += 1
-        days[end_day] += 1
+        days[end_day] -= 1
 
 def peak_flights_an_hour(all_data: list, max_datetime):
     if not isinstance(all_data, list) or not isinstance(max_datetime, datetime.datetime) or len(all_data) == 0:
@@ -111,7 +111,10 @@ def peak_flights_an_hour(all_data: list, max_datetime):
             full_idxes.append([max_idxes[i], max_idxes[i]])
     peak_hours = [] 
     for peak_idxes in full_idxes:
-        peak_hours.append([min_hour_datetime + datetime.timedelta(hours=sorted_times[peak_idxes[0]]), min_hour_datetime + datetime.timedelta(hours=sorted_times[peak_idxes[1] + 1])])
+        min_dt = min_hour_datetime + datetime.timedelta(hours=sorted_times[peak_idxes[0]])
+        max_dt = min_hour_datetime + datetime.timedelta(hours=sorted_times[peak_idxes[1] + 1])
+        peak_hours.append([{"year": min_dt.year, "month": min_dt.month, "day": min_dt.day, "hour": min_dt.hour},
+                           {"year": max_dt.year, "month": max_dt.year, "day": max_dt.day, "hour": max_dt.hour}])
     logging.info("Metrics: peak flights an hour: done in {} sec.".format(time.time() - start))
 
     return peak_hours, maxx
@@ -131,7 +134,7 @@ def flights_per_hour(all_data: list, min_datetime, max_datetime):
     end_hour = int((max_datetime - min_hour_datetime).total_seconds() // 3600 + 1)
     # print((max_datetime - min_hour_datetime + datetime.timedelta(minutes=data.flight_time_min)).total_seconds() // 3600) 
     # print(end_hour, type(end_hour))
-    for hour in range(end_hour):
+    for hour in range(end_hour + 1):
         all_hours[hour] = 0
 
     process_hours_dict(all_data, all_hours, min_hour_datetime, max_datetime)
@@ -161,18 +164,18 @@ def mean_days_dynamic(all_data, min_datetime, max_datetime):
     all_days = {}
     end_day = (max_datetime - min_day_datetime).days + 1
 
-    for day in range(end_day):
+    for day in range(end_day + 1):
         all_days[day] = 0
 
     process_days_dict(all_data, all_days, min_day_datetime, max_datetime)
     
-    days_flights = sorted(list(all_days.values()))
+    days_flights = sorted(list(all_days.values()))[:-1]
     if len(days_flights) == 0:
         logging.info("Metrics: mean days dynamic zero length array")
         return -1
-    summ = 0
-    for flights in days_flights:
-        summ += flights
+    #summ = 0
+    #for flights in days_flights:
+    #    summ += flights
 
     if len(days_flights) % 2 == 0:
         mediann = (days_flights[len(days_flights)//2 - 1] + days_flights[len(days_flights) // 2]) / 2
@@ -180,7 +183,7 @@ def mean_days_dynamic(all_data, min_datetime, max_datetime):
         mediann = days_flights[len(days_flights) // 2]
     logging.info("Metrics: mean days dynamic: done in {} sec.".format(time.time() - start))
 
-    return (summ / len(days_flights), mediann)
+    return (len(all_data) / len(days_flights), mediann)
 
 def top_regions(regions: dict, flights: list):
     if not isinstance(regions, dict) or not isinstance(flights, list):
