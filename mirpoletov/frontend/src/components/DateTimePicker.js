@@ -19,7 +19,9 @@ const DateTimePicker = ({
   const [selectedHour, setSelectedHour] = useState(now.getHours());
   const [selectedMinute, setSelectedMinute] = useState(now.getMinutes());
 
-  const years = [2020, 2021, 2022, 2023, 2024, 2025];
+  const years = Array.from({
+    length: Math.ceil((now.getFullYear() + 1 - 2020) / 1)
+  }, (_, i) => 2020 + i * 1);
   const monthNames = [
       "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"

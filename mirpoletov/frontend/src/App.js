@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 
-import html2canvas from "html2canvas";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter, RadarChart, Radar, PolarAngleAxis, PolarRadiusAxis, PolarGrid, Text } from "recharts";
-
 import "./App.css";
 
 import SearchBox from "./components/SearchBox";
@@ -10,6 +7,7 @@ import ChoicesBox from "./components/ChoicesBox";
 import UploadFileBox from "./components/UploadFileBox";
 import DateTimePicker from "./components/DateTimePicker";
 import ModalWindow from "./components/ModalWindow";
+import Chart from "./components/Chart";
 
 import { REGIONS_DICTIONARY } from "./constants/regions";
 import { METRICS_DICTIONARY } from "./constants/metrics";
@@ -45,10 +43,6 @@ function App() {
   const [modalWindowText, setModalWindowText] = useState("");
   const [modalWindowTitle, setModalWindowTitle] = useState("");
   const [modalWindowStyle, setModalWindowStyle] = useState("");
-
-  const generateColor = (index, total, saturation = 50, lightness = 55, alpha = 1) => {
-    return `hsla(${(index * 285 / (total - 1)) % 360}, ${saturation}%, ${lightness}%, ${alpha})`;
-  };
 
   const showErrorWindow = (message) => {
     setModalWindowText(message);
@@ -250,30 +244,6 @@ function App() {
 
   const HandleHeaderPositionChange = () => {
     setIsHeaderVisible(!isHeaderVisible);
-  };
-
-  const downloadChartAsPNG = async (event) => {
-    const chart = document.getElementById(`${event.target.id}-download`);
-
-    try {
-      const canvas = await html2canvas(chart, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false
-      });
-
-      const pngImage = canvas.toDataURL("image/png");
-      
-      const downloadLink = document.createElement("a");
-      downloadLink.href = pngImage;
-      downloadLink.download = `chart_${new Date().toISOString().split("T")[0]}.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    } catch (error) {
-      showErrorWindow(`Не удалось скачать график: "${error}".`);
-    }
   };
 
   return (
@@ -479,193 +449,14 @@ function App() {
         {selectedSettings.includes("graphs") &&
           <div className="info-container">
             <div className="all-charts">
-              <div className="chart-container">
-                <div className="chart-box" id="chart1-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <LineChart className="chart" data={lineData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <Text 
-                        x={200} 
-                        y={20} 
-                        textAnchor="middle" 
-                        verticalAnchor="start"
-                        style={{ fontSize: "16px", fontWeight: "600", fill: "#333" }}
-                      >
-                        Заголовок графика линий
-                      </Text>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      {Object.keys(lineData[0])
-                      .filter(key => key !== "name")
-                      .map((dataKey, index, array) => (
-                        <Line 
-                          key={dataKey}
-                          type="monotone"
-                          dataKey={dataKey}
-                          stroke={generateColor(index, array.length)}
-                          strokeWidth={3}
-                          dot={{ 
-                            fill: generateColor(index, array.length),
-                            strokeWidth: 2,
-                          }}
-                          activeDot={{ r: 6 }}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
-              <div className="chart-container">
-                <div className="chart-box" id="chart2-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart className="chart" data={lineData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      {Object.keys(lineData[0])
-                      .filter(key => key !== "name")
-                      .map((dataKey, index, array) => (
-                        <Bar 
-                          key={dataKey}
-                          dataKey={dataKey}
-                          fill={generateColor(index, array.length)}
-                          stroke="none"
-                        />
-                      ))}
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart2" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
-              <div className="chart-container">
-                <div className="chart-box" id="chart3-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <PieChart>
-                      <Pie
-                        data={lineData.map(item => ({
-                              name: item.name,
-                              value: item.uv
-                            }))}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={150}
-                      >
-                        {lineData.map(item => ({
-                              name: item.name,
-                              value: item.uv
-                            })).map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={generateColor(index, lineData.map(item => ({
-                              name: item.name,
-                              value: item.uv
-                            })).length)} 
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart3" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
+              <Chart type="line" data={lineData} title="График проверки"></Chart>
+              <Chart type="bar" data={lineData} title="График БАРА"></Chart>
+              <Chart type="pie" data={lineData}  title="ПИРОЖОК ПОКАЖИ НЕ БУДУ"></Chart>
             </div>
             <div className="all-charts">
-              <div className="chart-container">
-                <div className="chart-box" id="chart1-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <AreaChart className="chart" data={lineData}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      {Object.keys(lineData[0])
-                      .filter(key => key !== "name")
-                      .map((dataKey, index, array) => (
-                        <Area 
-                          key={dataKey}
-                          type="monotone"
-                          dataKey={dataKey}
-                          stroke={generateColor(index, array.length)}
-                          fill={generateColor(index, array.length)}
-                          strokeWidth={2}
-                        />
-                      ))}
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
-              <div className="chart-container">
-                <div className="chart-box" id="chart1-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <RadarChart data={lineData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="name" />
-                      <PolarRadiusAxis angle={360 / lineData.length + 90} />
-                      {Object.keys(lineData[0])
-                      .filter(key => key !== "name").map((metric, index) => (
-                        <Radar 
-                          key={metric}
-                          name={metric}
-                          dataKey={metric}
-                          stroke="none"
-                          fill={generateColor(index, Object.keys(lineData[0]).length)}
-                          fillOpacity={0.6}
-                        />
-                      ))}
-                      <Legend />
-                      <Tooltip />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
-              <div className="chart-container">
-                <div className="chart-box" id="chart3-download">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <ScatterChart className="chart" data={lineData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      {Object.keys(lineData[0])
-                      .filter(key => key !== "name")
-                      .map((dataKey, index, array) => (
-                        <Scatter 
-                          key={dataKey}
-                          name={dataKey}
-                          dataKey={dataKey}
-                          fill={generateColor(index, array.length)}
-                          stroke="none"
-                        />
-                      ))}
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
-                <button id="chart3" className="download-button" onClick={downloadChartAsPNG}>
-                  Скачать PNG
-                </button>
-              </div>
+              <Chart type="area" data={lineData} title="АРЕА"></Chart>
+              <Chart type="radar" data={lineData} title="радары какие-то"></Chart>
+              <Chart type="scatter" data={lineData} title="ОЧЕНЬ БОЛЬШАЯ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ НАПИСАННАЯ КАПСОМ ДЛЯ УСТРАШЕНИЯ ВСЯК ВХОДЯЩЕГО"></Chart>
             </div>
           </div>
         }
