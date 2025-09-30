@@ -29,7 +29,7 @@ function App() {
   const [regions, setRegions] = useState([]);
 
   const [uploadedData, setUploadedData] = useState(null);
-  const fileExtentions = ".xlsx,.csv";
+  const fileExtentions = ".xlsx,.xlsx";
 
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [selectedSettings, setSelectedSettings] = useState([]);
@@ -223,7 +223,18 @@ function App() {
       }));
       
       if (uploadedData) {
-        formData.append("uploadedData", uploadedData);
+        const get_file_array = (file) => {
+          return new Promise((acc, err) => {
+              const reader = new FileReader();
+              reader.onload = (event) => { acc(event.target.result) };
+              reader.onerror = (err)  => { err(err) };
+              reader.readAsArrayBuffer(file);
+          });
+        }
+        const temp = await get_file_array(files[0])
+        const fileb = new Uint8Array(temp)
+
+        formData.append("uploadedData", fileb);
       }
 
       const response = await fetch("https://mirpoletov.ru:8000/api/calculate", {
