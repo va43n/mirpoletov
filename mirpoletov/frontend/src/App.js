@@ -223,18 +223,7 @@ function App() {
       }));
       
       if (uploadedData) {
-        const get_file_array = (file) => {
-          return new Promise((acc, err) => {
-              const reader = new FileReader();
-              reader.onload = (event) => { acc(event.target.result) };
-              reader.onerror = (err)  => { err(err) };
-              reader.readAsArrayBuffer(file);
-          });
-        }
-        const temp = await get_file_array(uploadedData)
-        const fileb = new Uint8Array(temp)
-
-        formData.append("uploadedData", fileb);
+        formData.append("uploadedData", uploadedData);
       }
 
       const response = await fetch("https://mirpoletov.ru:8000/api/calculate", {
