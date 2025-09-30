@@ -11,7 +11,7 @@ from shapely.geometry import Point
 import psycopg as pg
 import numpy as np
 
-from parser import read_excel_calamine, parse_rows
+from parser import read_excel_calamine, parse_rows, ParsedData
 
 
 def compute_regions_types(parsed_data: list, regions, types: dict, completed_data: list):
@@ -124,6 +124,76 @@ def get_parsed_by_datetime_data(completed_data: list, result_data: list, min_dat
     logging.info("Parsing by datetime: done in {} sec.".format(time.time() - start))
     logging.info("Parsing by datetime: found values not in right datetime: {}".format(len(completed_data) - len(result_data)))
     return len(completed_data) - len(result_data)
+
+def make_regions_dict(all_data: list, regions: list, regions_dict: dict):
+    if not isinstance(all_data, list) or not isinstance(regions, list) or not isinstance(regions_dict, dict):
+        logging.info("Making regions dict: got wrong data type")
+        return -1
+    start = time.time()
+    for region in regions:
+        if not isinstance(region, int):
+            logging.info("Making regions dict: got wrong region data type")
+            return -1
+        regions_dict[region] = []
+    summ_len = 0
+    for data in all_data:
+        if not isinstance(data, ParsedData):
+            logging.info("Making regions dict: got not ParsedData")
+            return -1
+        if data.region in regions_dict:
+            regions_dict[data.region].append(data)
+            summ_len += 1
+    logging.info("Making regions dict: done in {} sec.".format(time.time() - start))
+    return summ_len
+
+def make_db_data_into_data(all_data: list, db_data: list):
+    if not isinstance(all_data, list) or not isinstance(db_data, list):
+        logging.info("Making db_data in data: got wrong type")
+        return -1
+    start = time.time()
+    for db_row in db_data:
+        data = ParsedData()
+        data.sid = db_row[0]
+        data.datetimed = db_row[2]
+        data.flight_time_min = db_row[3]
+        data.region = db_ros[1]
+        all_data.append(data)
+    logging.info("Making db_data in data: done in {} sec.".format(time.time() - start))
+    return 0
+
+def turn_regions_to_abbrs(regions, metrics_list: list):
+    if not isinstance(metrics_list, list):
+        logging.info("Turn regions to abbrs: got wrong data type")
+        return -1
+    start = time.time()
+    data_codes = regions["data_code"]
+    for region_metric in metrics_list:
+        if not isinstance(region_metric, list) or not len(region_metric) == 2 or not isinstance(region_metric[0], int) or region_metric[0] >= len(regions):
+            logging.info("Turn regions to abbrs: got wrong region type")
+            return -1
+        region_metric[0] = data_codes[region_metric[0]]
+    logging.info("Turn regions to abbrs: done in {} sec.".format(time.time() - start))
+    return 0
+
+def turn_abbrs_to_regions(abbrs: list, regions, list_regions: list):
+    if not isinstance(abbrs, list) or not isinstance(list_regions, list):
+        logging.info("Turn abbrs to regions: got wrong data type")
+        return -1
+    start = time.time()
+    wrong = 0
+    data_codes = regions["data_code"]
+    for abbr in abbrs:
+        if not isinstance(abbr, str):
+            logging.info("Turn abbrs to regions: gor wrong abbr type")
+            return -1
+        for i in range(len(data_codes)):
+            if data_codes[i] == abbr:
+                list_regions.append(i)
+                break
+        else:
+            wrong += 1
+    logging.info("Turn abbrs to regions: done in {} sec.".format(time.time() - start))
+    return wrong
             
     
 if __name__ == "__main__":

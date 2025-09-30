@@ -12,7 +12,7 @@ from sqlalchemy.engine import URL
 import psycopg
 
 from parser import read_excel_calamine, parse_rows
-from preparing_data import compute_regions_types, find_duplicates, get_parsed_by_datetime_data
+from preparing_data import compute_regions_types, find_duplicates, get_parsed_by_datetime_data, make_regions_dict
 
 
 def open_regions():
@@ -83,7 +83,7 @@ def select_data_db(conn, datetime_min, datetime_max, regions, need_sid=False):
     if need_sid:
         select_sqlstring = "SELECT sid, region, datetime_dep, flight_time_min FROM flights WHERE (datetime_dep between %s and %s) and (region = ANY(%s)) ORDER BY sid;"
     else:
-        select_sqlstring = "SELECT region, datetime_dep, flight_time_min FROM flights WHERE (datetime_dep between %s and %s) and (region = ANY(%s));"
+        select_sqlstring = "SELECT sid, region, datetime_dep, flight_time_min FROM flights WHERE (datetime_dep between %s and %s) and (region = ANY(%s));"
     
     data = -1
     try:
@@ -131,6 +131,9 @@ if __name__ == "__main__":
     logging.info("All data length: {}".format(len(all_data)))
     result_data = []
     wrong = get_parsed_by_datetime_data(all_data, result_data, datetime.datetime.today() - datetime.timedelta(days=90), datetime.datetime.today())
+    #regions = [1, 2, 3, 55, 54]
+    #regions_dict = {}
+    #make_regions_dict()
     # logging.info(result_data[:5])
 
 
