@@ -12,7 +12,7 @@ from sqlalchemy.engine import URL
 import psycopg
 
 from parser import read_excel_calamine, parse_rows
-from preparing_data import compute_regions_types, find_duplicates
+from preparing_data import compute_regions_types, find_duplicates, get_parsed_by_datetime_data
 
 
 def open_regions():
@@ -71,7 +71,7 @@ def insert_data_db(completed_data: list, conn):
         return count
 
 def select_data_db(conn, datetime_min, datetime_max, regions, need_sid=False):
-    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime) or not isinstance(need_sid, bool):
+    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime.datetime) or not isinstance(need_sid, bool) or not datetime_min < datetime_max:
         logging.info("Selecting fields: some values are not of thought types")
         return -1
     for region in regions:
@@ -129,6 +129,9 @@ if __name__ == "__main__":
     all_data = []
     dup, self_dup = find_duplicates(completed_data, data, all_data)
     logging.info("All data length: {}".format(len(all_data)))
+    result_data = []
+    wrong = get_parsed_by_datetime_data(all_data, result_data, datetime.datetime.today() - datetime.timedelta(days=90), datetime.datetime.today())
+    # logging.info(result_data[:5])
 
 
 

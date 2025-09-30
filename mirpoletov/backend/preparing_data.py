@@ -3,7 +3,8 @@ import os
 import time
 import logging
 import uuid
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
+import datetime
 
 import geopandas as gpd
 from shapely.geometry import Point
@@ -104,15 +105,25 @@ def find_duplicates(completed_data: list, data_from_db: list, resulting_data: li
     return (duplicated, self_duplicated)
 
 def get_parsed_by_datetime_data(completed_data: list, result_data: list, min_datetime, max_datetime):
-    if not isinstance(datetime_min, datetime.datetime) or not isinstance(datetime_max, datetime):
+    if not isinstance(min_datetime, datetime.datetime) or not isinstance(max_datetime, datetime.datetime) or not min_datetime < max_datetime:
         logging.info("Parsing by datetime: some values are not of thought types")
         return -1
     not_in_datetime = 0
-    
-    completed_data.sort(key=lambda x: x.datetimed)
+    start = time.time()
 
-    left_index = bisect_left(completed_data
-    
+    #completed_data.sort(key=lambda x: x.datetimed)
+
+    #left_index = bisect_left(completed_data, min_datetime, key=lambda x: x.datetimed)
+    #right_index = bisect_right(completed_data, max_datetime, key=lambda x: x.datetimed)
+
+    #for i in range(left_index, right_index):
+    #    result_data.append(completed_data[i])
+    for data in completed_data:
+        if min_datetime <= data.datetimed <= max_datetime:
+            result_data.append(data)
+    logging.info("Parsing by datetime: done in {} sec.".format(time.time() - start))
+    logging.info("Parsing by datetime: found values not in right datetime: {}".format(len(completed_data) - len(result_data)))
+    return len(completed_data) - len(result_data)
             
     
 if __name__ == "__main__":
