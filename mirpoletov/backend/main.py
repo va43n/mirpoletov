@@ -26,10 +26,13 @@ async def calculate_client_input(
     settings = request_data.get('settings', [])
     timestamp1 = request_data.get('timestamp1', {})
     timestamp2 = request_data.get('timestamp2', {})
+    uploadedFile = request_data.get('uploadedFile', None)
+
+    print(data, uploadedFile)
 
     print("Пришли данные:", regions, metrics, settings, timestamp1, timestamp2)
 
-    if file:
+    if uploadedFile:
         print("Даже есть какой-то файл")
 
     return {
