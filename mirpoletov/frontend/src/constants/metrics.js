@@ -29,11 +29,11 @@ export const METRICS_DICTIONARY = {
         description: "Процентное изменение числа полетов за месяц",
         id: "rise_fall",
     },
-    "flight_density": {
-        name: "Flight Density",
-        description: "Число полетов на 1000 км² территории региона",
-        id: "flight_density",
-    },
+    // "flight_density": {
+    //     name: "Flight Density",
+    //     description: "Число полетов на 1000 км² территории региона",
+    //     id: "flight_density",
+    // },
     "day_act": {
         name: "Дневная активность",
         description: "Распределение полетов по часам",
