@@ -18,5 +18,10 @@ export const SETTINGS_DICTIONARY = {
         name: "Скачать отчеты",
         description: "Загрузить отчеты в формате JSON",
         id: "json",
+    },
+    "upload": {
+        name: "Загрузить файл в базу",
+        description: "Загрузить данные из файла в базу данных",
+        id: "upload",
     }
 }

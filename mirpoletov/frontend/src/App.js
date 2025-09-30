@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import html2canvas from "html2canvas";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ComposedChart, ScatterChart, Scatter, RadarChart, Radar, RadialBar, RadialBarChart, Treemap, FunnelChart, Funnel, PolarAngleAxis, PolarRadiusAxis, PolarGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter, RadarChart, Radar, PolarAngleAxis, PolarRadiusAxis, PolarGrid } from "recharts";
 
 import "./App.css";
 
@@ -201,6 +201,10 @@ function App() {
       showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно выбрав функцию использования файла в настройках, но при этом не прикрепили файл с данными. Загрузите файл в соответствующее поле или отмените использование файла в настройках, чтобы произвести рассчет.`);
       return;
     }
+    if (!uploadedData && selectedSettings.includes("upload")) {
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно выбрав функцию загрузки данных из файла в базу, но при этом не прикрепили файл с данными. Загрузите файл в соответствующее поле или отмените загрузку данных в базу, чтобы произвести рассчет.`);
+      return;
+    }
     if (regions.length === 0 && !uploadedData) {
       showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав регионы для обработки. Выберите один или несколько регионов с помощью интерактивной карты или поля поиска, или же загрузите файл с данными в соответствующее поле, чтобы произвести рассчет.`);
       return;
@@ -233,12 +237,12 @@ function App() {
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error("Ошибка сервера");
+        throw new Error(response.message);
       }
       console.log("Результат:", result);
 
     } catch (error) {
-      console.error("Ошибка при запросе к серверу:", error);
+      showErrorWindow(`Ошибка при запросе к серверу: "${error.message}".`);
     }
     setIsModalWindowOpen(false);
 
