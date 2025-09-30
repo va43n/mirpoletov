@@ -1,19 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 
+import html2canvas from "html2canvas";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ComposedChart, ScatterChart, Scatter, RadarChart, Radar, RadialBar, RadialBarChart, Treemap, FunnelChart, Funnel, PolarAngleAxis, PolarRadiusAxis, PolarGrid } from "recharts";
+
 import "./App.css";
 
 import SearchBox from "./components/SearchBox";
 import ChoicesBox from "./components/ChoicesBox";
 import UploadFileBox from "./components/UploadFileBox";
 import DateTimePicker from "./components/DateTimePicker";
-import ErrorWindow from "./components/ErrorWindow";
+import ModalWindow from "./components/ModalWindow";
 
 import { REGIONS_DICTIONARY } from "./constants/regions";
 import { METRICS_DICTIONARY } from "./constants/metrics";
 import { SETTINGS_DICTIONARY } from "./constants/settings";
 
 function App() {
-  const [serverResponse, setServerResponse] = useState("");
+  const lineData = [
+    { name: "Янв", uv: 900, pv: 2400, amt: 2400, qwerty: 3000, z: 1000, y: 1000 },
+    { name: "Фев", uv: 3000, pv: 1398, amt: 2210, qwerty: 5000, z: 2000, y: 1000 },
+    { name: "Мар", uv: 1200, pv: 3800, amt: 2290, qwerty: 1000, z: 140, y: 1000 },
+    { name: "Апр", uv: 200, pv: 4800, amt: 2290, qwerty: 1000, z: 1000, y: 1000 },
+    { name: "Май", uv: 600, pv: 2800, amt: 1290, qwerty: 1000, z: 2000, y: 3000 }
+  ]
 
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
@@ -32,12 +41,27 @@ function App() {
   const [selectedDateTime1, setSelectedDateTime1] = useState("");
   const [selectedDateTime2, setSelectedDateTime2] = useState("");
 
-  const [isErrorWindowOpen, setIsErrorWindowOpen] = useState(false);
-  const [errorText, setErrorWindowText] = useState("");
+  const [isModalWindowOpen, setIsModalWindowOpen] = useState(false);
+  const [modalWindowText, setModalWindowText] = useState("");
+  const [modalWindowTitle, setModalWindowTitle] = useState("");
+  const [modalWindowStyle, setModalWindowStyle] = useState("");
+
+  const generateColor = (index, total, saturation = 50, lightness = 55, alpha = 1) => {
+    return `hsla(${(index * 285 / (total - 1)) % 360}, ${saturation}%, ${lightness}%, ${alpha})`;
+  };
 
   const showErrorWindow = (message) => {
-    setErrorWindowText(message);
-    setIsErrorWindowOpen(true);
+    setModalWindowText(message);
+    setModalWindowTitle("Предупреждение");
+    setModalWindowStyle("error");
+    setIsModalWindowOpen(true);
+  };
+
+  const showLoadingWindow = (message) => {
+    setModalWindowText(message);
+    setModalWindowTitle("Загрузка");
+    setModalWindowStyle("loading");
+    setIsModalWindowOpen(true);
   };
 
   const handleRegionMouseMove = (event) => {
@@ -84,18 +108,6 @@ function App() {
       region.classList.add("active");
       addToEnd(region.getAttribute("data-code"));
     });
-  };
-
-  // Потом убрать
-  const handleClick = async () => {
-    try {
-      const response = await fetch("https://mirpoletov.ru:8000/api/button-click");
-      const data = await response.json();
-      setServerResponse(data.response);
-    } catch (error) {
-      console.error("Ошибка при запросе к серверу:", error);
-      setServerResponse("Не удалось получить ответ от сервера.");
-    }
   };
 
   const handleRegionClick = (event) => {
@@ -150,7 +162,7 @@ function App() {
     setSelectedSettings(settings);
   };
 
-  const HandleCalculate = () => {
+  const HandleCalculate = async () => {
     const [date1, time1] = selectedDateTime1.split(" ");
     if ((date1 && time1) === undefined) {
       showErrorWindow(`Во временной метке начала не соблюден формат даты и времени "ДД.ММ.ГГГГ ЧЧ.ММ". Для решения проблемы попробуйте перезагрузить страницу.`);
@@ -198,25 +210,80 @@ function App() {
       return;
     }
 
-    if (!uploadedData && selectedSettings.includes("file"))
+    if (!uploadedData && selectedSettings.includes("file")) {
       showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно выбрав функцию использования файла в настройках, но при этом не прикрепили файл с данными. Загрузите файл в соответствующее поле или отмените использование файла в настройках, чтобы произвести рассчет.`);
-    else if (regions.length === 0 && !uploadedData)
-      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав регионы для обработки. Выберите один или несколько регионов с помощью интерактивной карты или поля поиска, или же загрузите файл с данными в соответствующее поле, чтобы произвести рассчет.`);
-    else if (selectedMetrics.length === 0)
-      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав ни одной метрики, по которой будут обрабатываться данные. Выберите одну или несколько метрик в соответствующем выпадающем списке, чтобы произвести рассчет.`);
-    else {
-      console.log(regions,
-                  selectedMetrics,
-                  selectedSettings,
-                  uploadedData,
-                  {day: day1, month: month1, year: year1, hour: hour1, minute: minute1},
-                  {day: day2, month: month2, year: year2, hour: hour2, minute: minute2}
-      );
+      return;
     }
+    if (regions.length === 0 && !uploadedData) {
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав регионы для обработки. Выберите один или несколько регионов с помощью интерактивной карты или поля поиска, или же загрузите файл с данными в соответствующее поле, чтобы произвести рассчет.`);
+      return;
+    }
+    if (selectedMetrics.length === 0) {
+      showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав ни одной метрики, по которой будут обрабатываться данные. Выберите одну или несколько метрик в соответствующем выпадающем списке, чтобы произвести рассчет.`);
+      return;
+    }
+
+    showLoadingWindow(`Ваши данные были отправлены на сервер. В ближайшее время по ним будут рассчитаны метрики, ожидайте.`);
+    try {
+      const formData = new FormData();
+
+      formData.append("data", JSON.stringify({
+        regions: regions,
+        metrics: selectedMetrics,
+        settings: selectedSettings,
+        timestamp1: {day: day1, month: month1, year: year1, hour: hour1, minute: minute1},
+        timestamp2: {day: day2, month: month2, year: year2, hour: hour2, minute: minute2}
+      }));
+      
+      if (uploadedData) {
+        formData.append("uploadedData", uploadedData);
+      }
+
+      const response = await fetch("https://mirpoletov.ru:8000/api/calculate", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка сервера");
+      }
+
+      const result = await response.json();
+      console.log("Результат:", result);
+
+    } catch (error) {
+      console.error("Ошибка при запросе к серверу:", error);
+    }
+    setIsModalWindowOpen(false);
+
   };
 
   const HandleHeaderPositionChange = () => {
     setIsHeaderVisible(!isHeaderVisible);
+  };
+
+  const downloadChartAsPNG = async (event) => {
+    const chart = document.getElementById(`${event.target.id}-download`);
+
+    try {
+      const canvas = await html2canvas(chart, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+
+      const pngImage = canvas.toDataURL("image/png");
+      
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngImage;
+      downloadLink.download = `chart_${new Date().toISOString().split("T")[0]}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch (error) {
+      showErrorWindow(`Не удалось скачать график: "${error}".`);
+    }
   };
 
   return (
@@ -418,16 +485,201 @@ function App() {
             )}</div>
           </div>
         </div>
+
+        <div className="all-charts-bg">
+          {selectedSettings.includes("graphs") &&
+            <>
+              <div className="all-charts">
+                <div className="chart-container">
+                  <div className="chart-box" id="chart1-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <LineChart className="chart" data={lineData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        {Object.keys(lineData[0])
+                        .filter(key => key !== "name")
+                        .map((dataKey, index, array) => (
+                          <Line 
+                            key={dataKey}
+                            type="monotone"
+                            dataKey={dataKey}
+                            stroke={generateColor(index, array.length)}
+                            strokeWidth={3}
+                            dot={{ 
+                              fill: generateColor(index, array.length),
+                              strokeWidth: 2,
+                            }}
+                            activeDot={{ r: 6 }}
+                          />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <div className="chart-box" id="chart2-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart className="chart" data={lineData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        {Object.keys(lineData[0])
+                        .filter(key => key !== "name")
+                        .map((dataKey, index, array) => (
+                          <Bar 
+                            key={dataKey}
+                            dataKey={dataKey}
+                            fill={generateColor(index, array.length)}
+                            stroke="none"
+                          />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart2" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <div className="chart-box" id="chart3-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <PieChart>
+                        <Pie
+                          data={lineData.map(item => ({
+                                name: item.name,
+                                value: item.uv
+                              }))}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={150}
+                        >
+                          {lineData.map(item => ({
+                                name: item.name,
+                                value: item.uv
+                              })).map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={generateColor(index, lineData.map(item => ({
+                                name: item.name,
+                                value: item.uv
+                              })).length)} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart3" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+              </div>
+              <div className="all-charts">
+                <div className="chart-container">
+                  <div className="chart-box" id="chart1-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <AreaChart className="chart" data={lineData}>
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        {Object.keys(lineData[0])
+                        .filter(key => key !== "name")
+                        .map((dataKey, index, array) => (
+                          <Area 
+                            key={dataKey}
+                            type="monotone"
+                            dataKey={dataKey}
+                            stroke={generateColor(index, array.length)}
+                            fill={generateColor(index, array.length)}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <div className="chart-box" id="chart1-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <RadarChart data={lineData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="name" />
+                        <PolarRadiusAxis angle={360 / lineData.length + 90} />
+                        {Object.keys(lineData[0])
+                        .filter(key => key !== "name").map((metric, index) => (
+                          <Radar 
+                            key={metric}
+                            name={metric}
+                            dataKey={metric}
+                            stroke="none"
+                            fill={generateColor(index, Object.keys(lineData[0]).length)}
+                            fillOpacity={0.6}
+                          />
+                        ))}
+                        <Legend />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart1" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <div className="chart-box" id="chart3-download">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <ScatterChart className="chart" data={lineData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        {Object.keys(lineData[0])
+                        .filter(key => key !== "name")
+                        .map((dataKey, index, array) => (
+                          <Scatter 
+                            key={dataKey}
+                            name={dataKey}
+                            dataKey={dataKey}
+                            fill={generateColor(index, array.length)}
+                            stroke="none"
+                          />
+                        ))}
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button id="chart3" className="download-button" onClick={downloadChartAsPNG}>
+                    Скачать PNG
+                  </button>
+                </div>
+              </div>
+            </>
+          }
+        </div>
       </div>
 
-      <ErrorWindow
-        isOpen={isErrorWindowOpen}
-        onClose={() => setIsErrorWindowOpen(false)}
-        message={errorText}
+      <ModalWindow
+        isOpen={isModalWindowOpen}
+        onClose={() => setIsModalWindowOpen(false)}
+        message={modalWindowText}
+        title={modalWindowTitle}
+        style={modalWindowStyle}
       />
-
-      <button onClick={handleClick}>Нажми на меня</button>
-      {serverResponse && <p className="info-text">Ответ сервера: <strong>{serverResponse}</strong></p>}
     </div>
   );
 }
