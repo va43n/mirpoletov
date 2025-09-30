@@ -231,7 +231,7 @@ function App() {
               reader.readAsArrayBuffer(file);
           });
         }
-        const temp = await get_file_array(files[0])
+        const temp = await get_file_array(uploadedData)
         const fileb = new Uint8Array(temp)
 
         formData.append("uploadedData", fileb);
