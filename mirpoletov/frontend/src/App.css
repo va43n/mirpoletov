@@ -183,6 +183,7 @@ button:active {
 .all-info-container {
   display: flex;
   flex-direction: column;
+  margin-bottom: 10px;
 }
 
 .info-container {
@@ -223,8 +224,7 @@ button:active {
 .all-charts {
   display: flex;
   margin: 0 auto;
-  margin-top: 10px;
-  width: 80vw;
+  width: 100%;
   gap: 10px;
   transition: all 0.3s ease;
 }
@@ -328,9 +328,9 @@ b {
     width: 100vw;
   }
 
-  .all-charts {
+  /* .all-charts {
     width: 100vw;
-  }
+  } */
 
   .all-charts {
     flex-direction: column;
