@@ -11,7 +11,7 @@ import psycopg
 
 
 logging.basicConfig(level=logging.INFO)
-file = open("../../../../../stuff")
+file = open("../../../../stuff")
 stuff = file.read().strip("\n\r ")
 start = time.time()
 

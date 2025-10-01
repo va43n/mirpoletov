@@ -17,7 +17,7 @@ from preparing_data import compute_regions_types, find_duplicates, get_parsed_by
 
 def open_regions():
     # logging.basicConfig(level=logging.INFO)
-    file = open("../../../../../stuff")
+    file = open("../../../../stuff")
     stuff = file.read().strip("\n\r ")
     start = time.time()
     conn_string = f"postgresql+psycopg://drones:{stuff}@192.168.0.200:5433/regions"
@@ -39,7 +39,7 @@ def open_regions():
             return gdf
 
 def open_types():
-    file = open("../../../../../stuff")
+    file = open("../../../../stuff")
     stuff = file.read().strip("\n\r ")
     conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
     with psycopg.connect(conninfo) as conn:
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     logging.info("Completing data: wrong completed: {}".format(wrong_completed))
 
     logging.info("Completing data: got records: {}".format(len(completed_data)))
-    file = open("../../../../../stuff")
+    file = open("../../../../stuff")
     stuff = file.read().strip("\n\r ")
     conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
     data = []

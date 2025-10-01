@@ -24,7 +24,7 @@ all_regions = open_regions()
 types = open_types()
 regions_len = len(all_regions)
 
-file = open("../../../../../stuff")
+file = open("../../../../stuff")
 stuff = file.read().strip("\n\r ")
 conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
 conn = pg.connect(conninfo)

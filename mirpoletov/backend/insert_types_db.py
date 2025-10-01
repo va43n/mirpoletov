@@ -4,7 +4,7 @@ import psycopg
 
 
 logging.basicConfig(level=logging.INFO)
-file = open("../../../../../stuff")
+file = open("../../../../stuff")
 stuff = file.read().strip("\n\r ")
 conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
 
