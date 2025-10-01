@@ -111,17 +111,20 @@ def process_metrics(all_data, settings, metrics, regions, all_regions, min_datet
             if isinstance(ret, int) and ret == -1:
                 logging.info("Processing metrics: something went wrong during processing {} in {}".format(metric, region))
                 return {failed_string: f"Возникла ошибка при вычислении выбранной метрики: {metric}"}
-            metrics_dict[metric][region] = ret
+            if region == mean_string:
+                metrics_dict[metric] = ret
+            else:
+                metrics_dict[metric][region] = ret
     return metrics_dict
 
 def process_data(settings, metrics, conninfo, regions, all_regions, types, min_datetime, max_datetime, filebytes):
     # Основная фугкция обработки
-    print(1)
+    # print(1)
     try:
         if filebytes and file_setting in settings:
             try:
-                bytes_real = BytesIO(filebytes)
-                headers, rows = read_excel_calamine(bytes_real)
+                # bytes_real = BytesIO(filebytes)
+                headers, rows = read_excel_calamine(filebytes)
             except Exception as e:
                 logging.info("Trouble with processing file, {}".format(e))
                 return {failed_string: "Возникла ошибка при обработке переданного файла"}
@@ -165,8 +168,8 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
                 if isinstance(datetimes, int):
                     logging.info("Trouble with finding min and max datetimes")
                     return {failed_string: "Возникла ошибка при обработке даты"}
-                datetime_min = datetimes[0]
-                datetime_max = datetimes[1]
+                min_datetime = datetimes[0]
+                max_datetime = datetimes[1]
             except Exception as e:
                 logging.info("Trouble with finding min and max datetimes: {}".format(e))
                 return {failed_string: "Возникла непредвиденная ошибка при обработке даты"}
@@ -182,6 +185,11 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
                 logging.info("Trouble with parsing by date: {}".format(e))
                 return {failed_string: "Возникла непредвиденная ошибка при определении данных, входящих в указанный временной промежуток"}
             """
+            regions_set = set()
+            for data in all_data:
+                regions_set.add(data.region)
+            regions_ints = list(regions_set)
+            """
             try:
                 regions_ints = []
                 wrong_regions = turn_abbrs_to_regions(regions, all_regions, regions_ints)
@@ -191,6 +199,7 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
             except Exception as e:
                 logging.info("Trouble with making regions out of abbrs: {}".format(e))
                 return {failed_string: "Возникла непредвиденная ошибка при обработке регионов полетов"}
+            """
             result_data = all_data
 
         elif file_setting in settings and not filebytes:
@@ -231,6 +240,9 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
                 return metrics
             return metrics
         except Exception as e:
+            import traceback
+            traceback.print_exception(e)
+            logging.info(e.args)
             logging.info("Processing metrics: failed: {}".format(e))
             return {failed_string: "Возникла непредвиденная ошибка при обработке метрик"}
     except Exception as e:

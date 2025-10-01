@@ -2,7 +2,7 @@
 from typing import Optional
 import json
 import logging
-from io import BytesIO
+# from io import BytesIO
 import multiprocessing as mp
 import datetime
 
@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Form, UploadFile, File
 from fastapi.responses import JSONResponse
 import psycopg as pg
-from psycopg_pool import ConnectionPool
 
 from parser import read_excel_calamine
 from db_work import open_regions, open_types
@@ -39,7 +38,7 @@ from config_vars_safe import (_dbname,
 logging.basicConfig(level=logging.INFO)
 all_settings = [file_setting, mean_setting, graphs_setting, json_setting, upload_setting]
 # Можео добавить flight density
-all_metrics = [flights_string, mean_duration_string, top_regs_string, peak_load_string, mean_dynamic_string, rise_fall_string, day_act_string, empty_days_string]
+all_metrics = [flights_string, mean_duration_string, top_regs_string, peak_load_string, mean_dynamic_string, day_act_string, empty_days_string]
 all_regions = open_regions()
 types = open_types()
 regions_len = len(all_regions)
@@ -172,16 +171,18 @@ def calculate_client_input(
         # print(data, uploadedData)
 
         logging.debug("Пришли данные: {}\n{}\n{}\n{}, {}".format(regions, metrics, settings, timestamp1, timestamp2))
-
+        
         if uploadedData and file_setting in settings:
             try:
-                filebytes = uploadedData.read()
+                #filebytes = uploadedData.file.read()
+                filebytes = uploadedData.file
             except Exception as e:
                 logging.info("Trouble with file: {}".format(e))
                 content = {failed_string: "Возникла ошибка при чтении переданного файла"}
                 return JSONResponse(status_code=417, headers=headers, content=content)
         else:
             filebytes = 0
+        
         try:
             content = process_data(settings, metrics, conninfo, regions, all_regions, types, min_datetime, max_datetime, filebytes)
         except Exception as e:

@@ -74,7 +74,7 @@ def find_minmax_datetime(all_data: list):
             return -1
         if data.datetimed > max_datetime:
             max_datetime = data.datetimed
-        elif data.datetimed < max_datetime:
+        elif data.datetimed < min_datetime:
             min_datetime = data.datetimed
     return (min_datetime, max_datetime)
 
