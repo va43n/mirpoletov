@@ -14,14 +14,6 @@ import { METRICS_DICTIONARY } from "./constants/metrics";
 import { SETTINGS_DICTIONARY } from "./constants/settings";
 
 function App() {
-  const lineData = [
-    { name: "Янв", uv: 900, pv: 2400, amt: 2400, qwerty: 3000, z: 1000, y: 1000 },
-    { name: "Фев", uv: 3000, pv: 1398, amt: 2210, qwerty: 5000, z: 2000, y: 1000 },
-    { name: "Мар", uv: 1200, pv: 3800, amt: 2290, qwerty: 1000, z: 140, y: 1000 },
-    { name: "Апр", uv: 200, pv: 4800, amt: 2290, qwerty: 1000, z: 1000, y: 1000 },
-    { name: "Май", uv: 600, pv: 2800, amt: 1290, qwerty: 1000, z: 2000, y: 3000 }
-  ]
-
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
   const [regions, setRegions] = useState([]);
@@ -43,6 +35,295 @@ function App() {
   const [modalWindowText, setModalWindowText] = useState("");
   const [modalWindowTitle, setModalWindowTitle] = useState("");
   const [modalWindowStyle, setModalWindowStyle] = useState("");
+
+  const [serverResponse, setServerResponse] = useState(null);
+  const [regionsCalculatedData, setRegionsCalculatedData] = useState({});
+
+  const handleFlightsMetricInterpretation = (metric, isMean) => {
+    const parseData = (data) => {
+      let result = [];
+      Object.keys(data).map((key, index) => {
+        result = [...result, {name: REGIONS_DICTIONARY[key].name, num: data[key]}]
+      });
+
+      return result;
+    }
+
+    if (isMean) {
+      const graphicData = serverResponse[metric];
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [`${metric}_mean`]: graphicData
+      }));
+    }
+    else {
+      const graphicData = parseData(serverResponse[metric]);
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [metric]: graphicData
+      }));
+    }
+  }
+
+  const handleTopRegsMetricInterpretation = (metric, isMean) => {
+    const parseData = (data) => {
+      let result = [];
+      data.map((elem, index) => {
+        result = [...result, {name: REGIONS_DICTIONARY[elem[0]].name, num: elem[1]}]
+      });
+
+      return result;
+    }
+
+    const graphicData = parseData(serverResponse[metric]);
+
+    if (isMean) {
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [`${metric}_mean`]: graphicData
+      }));
+    }
+    else {
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [metric]: graphicData
+      }));
+    }
+  }
+
+  const handlePeakLoadMetricInterpretation = (metric, isMean) => {
+    const parseData = (data) => {
+      let numbers = [];
+      let info = {};
+      Object.keys(data).map((key, index) => {
+        if (data[key] !== 0) {
+          numbers = [...numbers, {name: REGIONS_DICTIONARY[key].name, num: data[key][1]}];
+        
+          let all_dates = []
+          data[key][0].map((date, index) => {
+            const t1 = date[0];
+            const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
+            
+            const t2 = date[1];
+            const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
+          
+            all_dates = [...all_dates, {name: REGIONS_DICTIONARY[key].name, timestamp1: timestamp1, timestamp2: timestamp2}]
+          });
+          info[REGIONS_DICTIONARY[key].name] = [all_dates, data[key][1]];
+        }
+      });
+
+      return [numbers, info];
+    }
+
+    if (isMean) {
+      let all_dates = []
+      serverResponse[metric][0].map((date, index) => {
+        const t1 = date[0];
+        const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
+        
+        const t2 = date[1];
+        const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
+      
+        all_dates = [...all_dates, {timestamp1: timestamp1, timestamp2: timestamp2}]
+      });
+      const graphicData = [serverResponse[metric][1], all_dates];
+
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [`${metric}_mean`]: graphicData
+      }));
+    }
+    else {
+      const graphicData = parseData(serverResponse[metric]);
+
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [metric]: graphicData
+      }));
+    }
+  }
+
+  const handleMeanDynamicMetricInterpretation = (metric, isMean) => {
+    const parseData = (data) => {
+      let result = [];
+      Object.keys(data).map((key, index) => {
+        result = [...result, {name: REGIONS_DICTIONARY[key].name, "Среднее": data[key][0], "Медиана": data[key][1]}]
+      });
+
+      return result;
+    }
+
+    if (isMean) {
+      const graphicData = serverResponse[metric];
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [`${metric}_mean`]: graphicData
+      }));
+    }
+    else {
+      const graphicData = parseData(serverResponse[metric]);
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [metric]: graphicData
+      }));
+    }
+  }
+
+  // const handleRiseFallMetricInterpretation = (metric, isMean) => {
+  //   const parseData = (data) => {
+  //     const months = ["Январь", "Ферваль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+  //     const [date, time] = selectedDateTime1.split(" ");
+
+  //     const [day, month, year] = date.split(".").map(item => parseInt(item));
+  //     const startMonth = month - 1;
+
+  //     let result = [];
+
+  //     Object.keys(data).map((key, index) => {
+  //       let month_diff = {};
+        
+  //       if (data[key].length > 1) {
+  //         month_diff["name"] = REGIONS_DICTIONARY[key].name;
+  //         for (let i = 1; i < data[key].length; i++) {
+  //           if (data[key][i - 1] === 0 && data[key][i] === 0)
+  //             month_diff[months[(startMonth + i) % months.length]] = 0;
+  //           else if (data[key][i] === 0 && data[key][i - 1] >= 0)
+  //             month_diff[months[(startMonth + i) % months.length]] = -100;
+  //           else if (data[key][i - 1] === 0 && data[key][i] >= 0)
+  //             month_diff[months[(startMonth + i) % months.length]] = 100;
+  //           else
+  //             month_diff[months[(startMonth + i) % months.length]] = (data[key][i] * 100 / data[key][i - 1] - 100).toFixed(2);
+  //         }
+
+  //         result = [...result, month_diff];
+  //       }
+  //     });
+
+  //     return result;
+  //   }
+
+  //   const graphicData = parseData(serverResponse[metric]);
+
+  //   setRegionsCalculatedData(prev => ({
+  //     ...prev,
+  //     [metric]: graphicData
+  //   }));
+  // }
+
+  // const fromLineToArrayForRiseFall = (data) => {
+  //   let arr = [];
+
+  //   Object.keys(data).filter(item => item !== "name").map((month, index) => {
+  //     arr = [...arr, {"name": month, "num": parseFloat(data[month])}];
+  //   });
+
+  //   return arr;
+  // }
+
+  const handleDayActMetricInterpretation = (metric, isMean) => {
+    const parseData = (data) => {
+      const hours = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
+      const [date, time] = selectedDateTime1.split(" ");
+
+      const [hour, minute] = time.split(":").map(item => parseInt(item));
+      const startHour = hour;
+
+      let result = [];
+
+      if (isMean) {
+        
+        if (data.length > 1) {
+          for (let i = 0; i < data.length; i++) {
+            result = [...result, {"name": hours[(startHour + i) % hours.length], "num": data[i]}];
+          }
+          console.log(result);
+        }
+      }
+      else {
+        Object.keys(data).map((key, index) => {
+          let hours_dict = {};
+          
+          if (data[key].length > 1) {
+            hours_dict["name"] = REGIONS_DICTIONARY[key].name;
+            for (let i = 0; i < data[key].length; i++) {
+              hours_dict[hours[(startHour + i) % hours.length]] = data[key][i];
+            }
+
+            result = [...result, hours_dict];
+          }
+        });
+      }
+
+      return result;
+    }
+
+    const graphicData = parseData(serverResponse[metric]);
+    if (isMean) {
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [`${metric}_mean`]: graphicData
+      }));
+    }
+    else {
+      setRegionsCalculatedData(prev => ({
+        ...prev,
+        [metric]: graphicData
+      }));
+    }
+  }
+
+  const fromLineToArrayForRiseFall = (data) => {
+    let arr = [];
+
+    Object.keys(data).filter(item => item !== "name").map((month, index) => {
+      arr = [...arr, {"name": month, "num": parseFloat(data[month])}];
+    });
+
+    return arr;
+  }
+
+  const handleMetricCheck = (metric) => {
+    if (metric === "flights") {
+      handleFlightsMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    else if (metric === "mean_duration") {
+      handleFlightsMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    else if (metric === "top_regs") {
+      handleTopRegsMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    else if (metric === "peak_load") {
+      handlePeakLoadMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    else if (metric === "mean_dynamic") {
+      handleMeanDynamicMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    // else if (metric === "rise_fall") {
+    //   handleRiseFallMetricInterpretation(metric);
+    // }
+    else if (metric === "day_act") {
+      handleDayActMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+    else if (metric === "empty_days") {
+      handleFlightsMetricInterpretation(metric, selectedSettings.includes("mean"));
+    }
+  }
+
+  useEffect(() => {
+    const wrapper = async () => {
+      if (serverResponse === null) return;
+
+      await setRegionsCalculatedData({});
+
+      for (let metric of Object.keys(serverResponse)) {
+
+        handleMetricCheck(metric);
+      }
+    }
+    wrapper();
+
+  }, [serverResponse]);
 
   const showErrorWindow = (message) => {
     setModalWindowText(message);
@@ -230,15 +511,16 @@ function App() {
       });
 
       const result = await response.json();
-      if (!response.ok) {
-        throw new Error(response.message);
+      setIsModalWindowOpen(false);
+      if (result["failed"] || result["message"]) {
+        throw new Error(`${result["failed"]} ${result["message"]}`);
       }
       console.log("Результат:", result);
 
+      setServerResponse(result);
     } catch (error) {
       showErrorWindow(`Ошибка при запросе к серверу: "${error.message}".`);
     }
-    setIsModalWindowOpen(false);
 
   };
 
@@ -446,19 +728,357 @@ function App() {
           </div>
         </div>
 
-        {selectedSettings.includes("graphs") &&
-          <div className="info-container">
-            <div className="all-charts">
-              <Chart type="line" data={lineData} title="График проверки"></Chart>
-              <Chart type="bar" data={lineData} title="График БАРА"></Chart>
-              <Chart type="pie" data={lineData}  title="ПИРОЖОК ПОКАЖИ НЕ БУДУ"></Chart>
-            </div>
-            <div className="all-charts">
-              <Chart type="area" data={lineData} title="АРЕА"></Chart>
-              <Chart type="radar" data={lineData} title="радары какие-то"></Chart>
-              <Chart type="scatter" data={lineData} title="ОЧЕНЬ БОЛЬШАЯ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ НАПИСАННАЯ КАПСОМ ДЛЯ УСТРАШЕНИЯ ВСЯК ВХОДЯЩЕГО"></Chart>
-            </div>
-          </div>
+        {serverResponse && 
+          <>
+            {Object.keys(regionsCalculatedData).length > 0 &&
+              <div>
+                {selectedSettings.includes("mean") ? (
+                      <>
+                        <div className="info-container">
+                          <p className="info-title">{`Средние значения некоторых метрик по ${regions.length} регионам`}</p>
+                          <div className="all-charts">
+                            {Object.keys(regionsCalculatedData).map((metric, index) => (
+                              <>
+                                {metric === "flights_mean" && (
+                                  <div className="chart-container" key={`mean-text-${index}`}>
+                                    <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
+                                    <p className="info-subtitle">{regionsCalculatedData[metric]}</p>
+                                  </div>
+                                )}
+                                {metric === "mean_duration_mean" && (
+                                  <div className="chart-container" key={`mean-text-${index}`}>
+                                    <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
+                                    <p className="info-subtitle">{regionsCalculatedData[metric].toFixed(0)}</p>
+                                  </div>
+                                )}
+                                {metric === "empty_days_mean" && (
+                                  <div className="chart-container" key={`mean-text-${index}`}>
+                                    <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
+                                    <p className="info-subtitle">{regionsCalculatedData[metric]}</p>
+                                  </div>
+                                )}
+                                {metric === "mean_dynamic_mean" && (
+                                  <div className="chart-container" key={`mean-text-${index}`}>
+                                    <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
+                                    <p className="info-subtitle">Среднее: {regionsCalculatedData[metric][0].toFixed(2)}</p>
+                                    <p className="info-subtitle">Медиана: {regionsCalculatedData[metric][1].toFixed(2)}</p>
+                                  </div>
+                                )}
+                                {metric === "peak_load_mean" && (
+                                  <div className="chart-container" key={`mean-text-${index}`}>
+                                    <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
+                                    <p className="info-subtitle">Число полетов: {regionsCalculatedData[metric][0]}</p>
+                                    <div className="info-subtitle">
+                                      Полеты совершались: 
+                                      {regionsCalculatedData[metric][1].map((time, index) => (
+                                        <p key={`mean-text-peak-${index}`} className="info-subtitle">C {time["timestamp1"]} по {time["timestamp2"]}.</p>
+                                      ))}
+                                    </div>
+                                    
+                                  </div>
+                                )}
+                              </>
+                            ))}
+                          </div>
+                          
+                          
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {Object.keys(regionsCalculatedData).map((metric, index) => (
+                          <div key={`reg-${index}`}>
+                            {metric === "flights" && (
+                              <div className="info-container">
+                                <p className="info-title">{`Информация для метрики: "${METRICS_DICTIONARY[metric].name}" по различным регионам`}</p>
+                                {Object.keys(regionsCalculatedData[metric]).map((region, index) => (
+                                  <div className="chart-container" key={`reg-text-flights-${region}-${index}`}>
+                                    <p className="info-subtitle"><b>{`${regionsCalculatedData[metric][region]["name"]}:`}</b></p>
+                                    <div className="info-subtitle">{`Количество полетов по региону ${regionsCalculatedData[metric][region]["name"]} равно ${regionsCalculatedData[metric][region]["num"]}.`}</div>
+                                  </div>
+                                ))}
+                                <></>
+                              </div>
+                            )}
+                            {metric === "mean_duration" && (
+                              <div className="info-container">
+                                <p className="info-title">{`Информация для метрики: "${METRICS_DICTIONARY[metric].name}" по различным регионам`}</p>
+                                {Object.keys(regionsCalculatedData[metric]).map((region, index) => (
+                                  <div className="chart-container" key={`reg-text-mean_duration-${region}-${index}`}>
+                                    <p className="info-subtitle"><b>{`${regionsCalculatedData[metric][region]["name"]}:`}</b></p>
+                                    <div className="info-subtitle">{`Средняя длительность полета по региону ${regionsCalculatedData[metric][region]["name"]} составляет ${Math.round(regionsCalculatedData[metric][region]["num"])} минут.`}</div>
+                                  </div>
+                                ))}
+                                <></>
+                              </div>
+                            )}
+                            {metric === "top_regs" && (
+                              <>
+                                <></>
+                                <></>
+                              </>
+                            )}
+                            {metric === "peak_load" && (
+                              <div className="info-container">
+                                <p className="info-title">{`Информация для метрики: "${METRICS_DICTIONARY[metric].name}" по различным регионам`}</p>
+                                {Object.keys(regionsCalculatedData[metric][1]).map((region, index) => (
+                                  <div className="chart-container" key={`reg-text-peak_load-${region}-${index}`}>
+                                    <p className="info-subtitle"><b>{`${region}:`}</b></p>
+                                    <div className="info-subtitle">{`Максимальное число полетов по региону ${region} равно ${regionsCalculatedData[metric][1][region][1]} и было достигнуто ${regionsCalculatedData[metric][1][region][0].length} раз:`}</div>
+                                    {regionsCalculatedData[metric][1][region][0].map((time, index) => (
+                                      <div key={`reg-text-peak-load-${region}-${index}-${index}`} className="info-subtitle">С {time["timestamp1"]} по {time["timestamp2"]}.</div>
+                                    ))}
+                                  </div>
+                                ))}
+                                <></>
+                              </div>
+                            )}
+                            {metric === "mean_dynamic" && (
+                              <div className="info-container">
+                                <p className="info-title">{`Информация для метрики: "${METRICS_DICTIONARY[metric].name}" по различным регионам`}</p>
+                                {Object.keys(regionsCalculatedData[metric]).map((region, index) => (
+                                  <div className="chart-container" key={`reg-text-mean_dynamic-${region}-${index}`}>
+                                    <p className="info-subtitle"><b>{`${regionsCalculatedData[metric][region]["name"]}:`}</b></p>
+                                    <div className="info-subtitle">{`${regionsCalculatedData[metric][region]["Среднее"].toFixed(2)} - среднее число полетов в сутки по региону ${regionsCalculatedData[metric][region]["name"]}.`}</div>
+                                    <div className="info-subtitle">{`${regionsCalculatedData[metric][region]["Медиана"].toFixed(2)} - медианное значение числа полетов в сутки по региону ${regionsCalculatedData[metric][region]["name"]}.`}</div>
+                                  </div>
+                                ))}
+                                <></>
+                              </div>
+                            )}
+                            {/* {metric === "rise_fall" && (
+                              <>
+                                {selectedSettings.includes("graphs") && 
+                                  <>
+                                    {regionsCalculatedData[metric].map((region, index) => (
+                                      <div className="info-container" key={`reg-text-rise_fall-${region}-${index}`}>
+                                        <p className="info-title">{`Графики для метрики: "${METRICS_DICTIONARY[metric].name}" по региону ${region.name}:`}</p>
+                                        <div className="all-charts">
+                                          <Chart type="area" data={fromLineToArrayForRiseFall(region)} title={`Рост/падение числа полетов по месяцам по региону ${region.name}`}></Chart>
+                                          <Chart type="bar" data={fromLineToArrayForRiseFall(region)}  title={`Рост/падение числа полетов по месяцам по региону ${region.name}`}></Chart>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                }
+                              </>
+                            )} */}
+                            {metric === "day_act" && (
+                              <>
+                                {/* <></> */}
+                                {selectedSettings.includes("graphs") && 
+                                  <>
+                                    {regionsCalculatedData[metric].map((region, index) => (
+                                      <div className="info-container" key={`reg-text-day_act-${region}-${index}`}>
+                                        <p className="info-title">{`Графики для метрики: "${METRICS_DICTIONARY[metric].name}" по региону ${region.name}:`}</p>
+                                        <div className="all-charts">
+                                          <Chart type="area" data={fromLineToArrayForRiseFall(region)} title={`Распределение полетов по часам по региону ${region.name}`}></Chart>
+                                          <Chart type="bar" data={fromLineToArrayForRiseFall(region)}  title={`Распределение полетов по часам по региону ${region.name}`}></Chart>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                }
+                              </>
+                            )}
+                            {metric === "empty_days" && (
+                              <>
+                                <></>
+                                <></>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                
+              </div>
+            }
+
+            {Object.keys(regionsCalculatedData).length > 0 &&
+              <div>
+                {selectedSettings.includes("mean") ? (
+                  <>
+                    {Object.keys(regionsCalculatedData).map((metric, index) => (
+                      <>
+                         {metric === "top_regs_mean" && regionsCalculatedData[metric].length > 1 && (
+                          <div className="info-container" key={`mean-text-top_regs-${index}`}>
+                              <p className="info-title">{`${METRICS_DICTIONARY[metric.slice(0, -5)].name} для ${regions.length} регионов:`}</p>
+                              {regionsCalculatedData[metric].map((region, index) => (
+                                <div key={`mean-text-top_regs-${index}`} className="info-subtitle">
+                                  {`${regionsCalculatedData[metric][index].num} полетов было совершено в регионе`}<b>{` ${regionsCalculatedData[metric][index].name} `}</b>за заданный период.
+                                </div>
+                              ))}
+                            {selectedSettings.includes("graphs") && 
+                              <>
+                                <div className="all-charts">
+                                  <Chart type="bar" data={regionsCalculatedData[metric]} title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                  <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                  <Chart type="line" data={regionsCalculatedData[metric]} title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                </div>
+                              </>
+                            }
+                          </div>
+                        )}
+                        {metric === "day_act_mean" && regionsCalculatedData[metric].length > 1 && (
+                          <>
+                            <></>
+                            {selectedSettings.includes("graphs") && 
+                              <div className="info-container" key={`mean-graphs-day_act-${index}`}>
+                                <p className="info-title">{`Общие графики для метрики: "${METRICS_DICTIONARY[metric.slice(0, -5)].name}"`}</p>
+                                <div className="all-charts">
+                                  <Chart type="line" data={regionsCalculatedData[metric]}  title={`Среднее распределение полетов по часам в ${regions.length} регионах`}></Chart>
+                                  <Chart type="area" data={regionsCalculatedData[metric]}  title={`Среднее распределение полетов по часам в ${regions.length} регионах`}></Chart>
+                                </div>
+                              </div>
+                            }
+                          </>
+                        )}
+                      </>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                  {Object.keys(regionsCalculatedData).map((metric, index) => (
+                    <div key={`mean-${index}`}>
+                      {metric === "flights" && regionsCalculatedData[metric].length > 1 && (
+                        <>
+                          {selectedSettings.includes("graphs") && 
+                            <div className="info-container" key={`mean-text-flights-${index}`}>
+                              <p className="info-title">{`Общая информация по метрике "${METRICS_DICTIONARY[metric].name}" для ${regions.length} регионов:`}</p>
+                              <div className="all-charts">
+                                <Chart type="bar" data={regionsCalculatedData[metric]} title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Число полетов в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </div>
+                          }
+                        </>
+                      )}
+                      {metric === "mean_duration" && regionsCalculatedData[metric].length > 1 && (
+                        <>
+                          {selectedSettings.includes("graphs") && 
+                            <div className="info-container">
+                              <p className="info-title">{`Общая информация по метрике "${METRICS_DICTIONARY[metric].name}" для ${regions.length} регионов:`}</p>
+                              <div className="all-charts">
+                                <Chart type="bar" data={regionsCalculatedData[metric]} title={`Средняя длительность полета в минутах в ${regions.length} регионах`}></Chart>
+                                <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Средняя длительность полета в минутах в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </div>
+                          }
+                        </>
+                      )}
+                      {metric === "top_regs" && regionsCalculatedData[metric].length > 1 && (
+                        <div className="info-container" key={`mean-text-top_regs-${index}`}>
+                            <p className="info-title">{`${METRICS_DICTIONARY[metric].name} для ${regions.length} регионов:`}</p>
+                            {regionsCalculatedData[metric].map((region, index) => (
+                              <div key={`mean-text-top_regs-${index}`} className="info-subtitle">
+                                {`${regionsCalculatedData[metric][index].num} полетов было совершено в регионе`}<b>{` ${regionsCalculatedData[metric][index].name} `}</b>за заданный период.
+                              </div>
+                            ))}
+                          {selectedSettings.includes("graphs") && 
+                            <>
+                              <div className="all-charts">
+                                <Chart type="bar" data={regionsCalculatedData[metric]} title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Число полетов в ${regions.length} регионах`}></Chart>
+                                <Chart type="line" data={regionsCalculatedData[metric]} title={`Число полетов в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </>
+                          }
+                        </div>
+                      )}
+                      {metric === "peak_load" && regionsCalculatedData[metric][0].length > 1 && (
+                        <>
+                          <></>
+                          {selectedSettings.includes("graphs") && 
+                            <div className="info-container" key={`mean-graphs-peak_load-${index}`}>
+                              <p className="info-title">{`Общие графики для метрики: "${METRICS_DICTIONARY[metric].name}"`}</p>
+                              <div className="all-charts">
+                                <Chart type="bar" data={regionsCalculatedData[metric][0]} title={`Максимальное число полетов за час в ${regions.length} регионах`}></Chart>
+                                <Chart type="pie" data={regionsCalculatedData[metric][0]}  title={`Максимальное число полетов за час в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </div>
+                          }
+                        </>
+                      )}
+                      {metric === "mean_dynamic" && regionsCalculatedData[metric].length > 1 && (
+                        <>
+                          <></>
+                          {selectedSettings.includes("graphs") && 
+                            <div className="info-container" key={`mean-graphs-mean_dynamic-${index}`}>
+                              <p className="info-title">{`Общие графики для метрики: "${METRICS_DICTIONARY[metric].name}"`}</p>
+                              <div className="all-charts">
+                                <Chart type="line" data={regionsCalculatedData[metric]} title={`Среднее и медианное число полетов в сутки в ${regions.length} регионах`}></Chart>
+                                <Chart type="bar" data={regionsCalculatedData[metric]}  title={`Среднее и медианное число полетов в сутки в ${regions.length} регионах`}></Chart>
+                                <Chart type="area" data={regionsCalculatedData[metric]}  title={`Среднее и медианное число полетов в сутки в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </div>
+                          }
+                        </>
+                      )}
+                      {/* {metric === "rise_fall" && (
+                        <>
+                          {regionsCalculatedData[metric].length > 1 ? (
+                            <>
+                              <></>
+                              {selectedSettings.includes("graphs") && 
+                                <div className="info-container" key={`mean-graphs-rise_fall-${index}`}>
+                                  <p className="info-title">{`Общие графики для метрики: "${METRICS_DICTIONARY[metric].name}"`}</p>
+                                  <div className="all-charts">
+                                    <Chart type="radar" data={regionsCalculatedData[metric]}  title={`Процентное изменение числа полетов за месяц в ${regions.length} регионах`}></Chart>
+                                    <Chart type="area" data={regionsCalculatedData[metric]}  title={`Процентное изменение числа полетов за месяц в ${regions.length} регионах`}></Chart>
+                                  </div>
+                                </div>
+                              }
+                            </>
+                          ): (
+                            <div className="info-container" key={`mean-graphs-rise_fall-${index}`}>
+                              <p className="info-title">{`Общая информация для метрики: "${METRICS_DICTIONARY[metric].name}"`}</p>
+                              <div className="info-subtitle">
+                                Не удалось вычислить процентное изменение числа полетов за месяц, так как был указан небольшой временной промежуток. Для того, чтобы отследить изменения за месяц, предлагается брать временной промежуток от двух месяцев и более. 
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )} */}
+                      {metric === "day_act" && regionsCalculatedData[metric].length > 1 && (
+                        <>
+                          <></>
+                          {selectedSettings.includes("graphs") && 
+                            <div className="info-container" key={`mean-graphs-day_act-${index}`}>
+                              <p className="info-title">{`Общие графики для метрики: "${METRICS_DICTIONARY[metric].name}"`}</p>
+                              <div className="all-charts">
+                                <Chart type="radar" data={regionsCalculatedData[metric]}  title={`Распределение полетов по часам в ${regions.length} регионах`}></Chart>
+                                <Chart type="line" data={regionsCalculatedData[metric]}  title={`Распределение полетов по часам в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </div>
+                          }
+                        </>
+                      )}
+                      {metric === "empty_days" && regionsCalculatedData[metric].length > 1 && (
+                        <div className="info-container" key={`mean-text-empty_days-${index}`}>
+                            <p className="info-title">{`Общая информация по метрике "${METRICS_DICTIONARY[metric].name}" для ${regions.length} регионов:`}</p>
+                            {regionsCalculatedData[metric].map((region, index) => (
+                              <div key={`mean-text-empty_days-${index}`} className="info-subtitle">
+                                {`${regionsCalculatedData[metric][index].num} дней не совершались полеты в`}<b>{` ${regionsCalculatedData[metric][index].name} `}</b>за заданный период.
+                              </div>
+                            ))}
+                          {selectedSettings.includes("graphs") && 
+                            <>
+                              <div className="all-charts">
+                                <Chart type="bar" data={regionsCalculatedData[metric]} title={`Число нулевых дней в ${regions.length} регионах`}></Chart>
+                                <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Число нулевых дней в ${regions.length} регионах`}></Chart>
+                              </div>
+                            </>
+                          }
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  </>
+                )}
+              </div>
+            }
+          </>
         }
         
       </div>
