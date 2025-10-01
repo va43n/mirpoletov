@@ -16,11 +16,14 @@ from preparing_data import compute_regions_types, find_duplicates, get_parsed_by
 
 
 def open_regions():
+    from config_vars_safe import pass_info, _dbname, _host, _port, _user
     # logging.basicConfig(level=logging.INFO)
-    file = open("../../../../stuff")
+    file = open(pass_info)
+    del pass_info
     stuff = file.read().strip("\n\r ")
     start = time.time()
-    conn_string = f"postgresql+psycopg://drones:{stuff}@192.168.0.200:5433/regions"
+    conn_string = f"postgresql+psycopg://{_user}:{stuff}@{_host}:{_port}/{_dbname}"
+    del _dbname, _host, stuff, _port, _user
     eng = create_engine(conn_string)
     with eng.connect() as conn:
         with conn.begin() as trans:
@@ -39,9 +42,12 @@ def open_regions():
             return gdf
 
 def open_types():
-    file = open("../../../../stuff")
+    from config_vars_safe import pass_info, _dbname, _host, _port, _user
+    file = open(pass_info)
+    del pass_info
     stuff = file.read().strip("\n\r ")
-    conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
+    conninfo = f"dbname={_dbname} user={_user} password={stuff} host={_host} port={_port}"
+    del stuff, _user, _host, _port, _dbname
     with psycopg.connect(conninfo) as conn:
         with conn.cursor() as cur:
             sql_string = "SELECT id, name FROM bpla_types;"
@@ -112,9 +118,10 @@ if __name__ == "__main__":
     logging.info("Completing data: wrong completed: {}".format(wrong_completed))
 
     logging.info("Completing data: got records: {}".format(len(completed_data)))
-    file = open("../../../../stuff")
+    from config_vars_safe import pass_info, _dbname, _host, _port, _user
+    file = open(pass_info)
     stuff = file.read().strip("\n\r ")
-    conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
+    conninfo = f"dbname={_dbname} user={_user} password={stuff} host={_host} port={_port}"
     data = []
     with psycopg.connect(conninfo) as conn:
         count = insert_data_db(completed_data, conn)

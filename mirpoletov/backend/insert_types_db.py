@@ -2,11 +2,14 @@ import logging
 
 import psycopg
 
+from config_vars_safe import pass_info, _dbname, _host, _port, _user
 
 logging.basicConfig(level=logging.INFO)
-file = open("../../../../stuff")
+file = open(pass_info)
+del pass_info
 stuff = file.read().strip("\n\r ")
-conninfo = f"dbname=regions user=drones password={stuff} host=192.168.0.200 port=5433"
+conninfo = f"dbname={_dbname} user={_user} password={stuff} host={_host} port={_port}"
+del _dbname, _host, _port, _user, stuff
 
 with psycopg.connect(conninfo) as conn:
     with conn.cursor() as cur:
