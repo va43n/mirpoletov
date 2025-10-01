@@ -1,6 +1,8 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter, RadarChart, Radar, PolarAngleAxis, PolarRadiusAxis, PolarGrid, Text } from "recharts";
 import html2canvas from "html2canvas";
 
+import { useInView } from 'react-intersection-observer';
+
 import "./Chart.css"
 
 const Chart = ({ 
@@ -8,8 +10,13 @@ const Chart = ({
   type = "line",
   data = {}
 }) => {
+  const { ref, inView } = useInView({
+    triggerOnce: false,
+    rootMargin: '100px 0px',
+  });
+
   const generateColor = (index, total, saturation = 50, lightness = 55, alpha = 1) => {
-    return `hsla(${(index * 285 / (total - 1)) % 360}, ${saturation}%, ${lightness}%, ${alpha})`;
+    return `hsla(${(index * 285 / (total) + 200) % 360}, ${saturation}%, ${lightness}%, ${alpha})`;
   };
 
   const downloadChartAsPNG = async (event) => {
@@ -37,44 +44,50 @@ const Chart = ({
   };
 
   if (type === "line") return (
-    <div className="chart-container">
-      <div className="chart-box">
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart className="chart" data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <Text textAnchor="start" x={100} scaleToFit={true} verticalAnchor="start" style={{ fontWeight: "600", fill: "#333" }}>
-              {title}
-            </Text>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {Object.keys(data[0])
-            .filter(key => key !== "name")
-            .map((dataKey, index, array) => (
-              <Line 
-                key={dataKey}
-                type="monotone"
-                dataKey={dataKey}
-                stroke={generateColor(index, array.length)}
-                strokeWidth={3}
-                dot={{ 
-                fill: generateColor(index, array.length),
-                strokeWidth: 2,
-                }}
-                activeDot={{ r: 6 }}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <button className="download-button" onClick={downloadChartAsPNG}>
-        Скачать PNG
-      </button>
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
+        <div className="chart-container">
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart className="chart" data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <Text textAnchor="start" x={100} scaleToFit={true} verticalAnchor="start" style={{ fontWeight: "600", fill: "#333" }}>
+                  {title}
+                </Text>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {Object.keys(data[0])
+                .filter(key => key !== "name")
+                .map((dataKey, index, array) => (
+                  <Line 
+                    key={dataKey}
+                    type="monotone"
+                    dataKey={dataKey}
+                    stroke={generateColor(index, array.length)}
+                    strokeWidth={3}
+                    dot={{ 
+                    fill: generateColor(index, array.length),
+                    strokeWidth: 2,
+                    }}
+                    activeDot={{ r: 6 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <button className="download-button" onClick={downloadChartAsPNG}>
+            Скачать PNG
+          </button>
+        </div>
+      ) : (<p>Загрузка</p>)}
     </div>
   );
 
   if (type === "bar") return (
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
     <div className="chart-container">
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={400}>
@@ -104,9 +117,13 @@ const Chart = ({
         Скачать PNG
       </button>
     </div>
+    ) : (<p>Загрузка</p>)}
+    </div>
   );
 
   if (type === "pie") return (
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
     <div className="chart-container">
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={400}>
@@ -117,29 +134,29 @@ const Chart = ({
             <Pie
               data={data.map(item => ({
                     name: item.name,
-                    value: item.uv
+                    value: item.num
                   }))}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
               outerRadius={150}
+              label={({ name }) => `${name}`}
             >
               {data.map(item => ({
                     name: item.name,
-                    value: item.uv
+                    value: item.num
                   })).map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={generateColor(index, data.map(item => ({
                     name: item.name,
-                    value: item.uv
+                    value: item.num
                   })).length)} 
                 />
               ))}
             </Pie>
             <Tooltip />
-            <Legend />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -147,9 +164,13 @@ const Chart = ({
         Скачать PNG
       </button>
     </div>
+    ) : (<p>Загрузка</p>)}
+    </div>
   );
 
   if (type === "area") return (
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
     <div className="chart-container">
       <div className="chart-box" >
         <ResponsiveContainer width="100%" height={400}>
@@ -180,9 +201,13 @@ const Chart = ({
         Скачать PNG
       </button>
     </div>
+    ) : (<p>Загрузка</p>)}
+    </div>
   );
 
   if (type === "radar") return (
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
     <div className="chart-container">
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={400}>
@@ -213,9 +238,13 @@ const Chart = ({
         Скачать PNG
       </button>
     </div>
+    ) : (<p>Загрузка</p>)}
+    </div>
   );
 
   if (type === "scatter") return (
+    <div className="dynamic-container" ref={ref}>
+      {inView ? (
     <div className="chart-container">
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={400}>
@@ -245,6 +274,8 @@ const Chart = ({
       <button className="download-button" onClick={downloadChartAsPNG}>
         Скачать PNG
       </button>
+    </div>
+    ) : (<p>Загрузка</p>)}
     </div>
   );
 }

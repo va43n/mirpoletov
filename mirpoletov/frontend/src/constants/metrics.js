@@ -24,11 +24,11 @@ export const METRICS_DICTIONARY = {
         description: "Среднее и медианное число полетов в сутки",
         id: "mean_dynamic",
     },
-    "rise_fall": {
-        name: "Рост/падение",
-        description: "Процентное изменение числа полетов за месяц",
-        id: "rise_fall",
-    },
+    // "rise_fall": {
+    //     name: "Рост/падение",
+    //     description: "Процентное изменение числа полетов за месяц",
+    //     id: "rise_fall",
+    // },
     // "flight_density": {
     //     name: "Flight Density",
     //     description: "Число полетов на 1000 км² территории региона",

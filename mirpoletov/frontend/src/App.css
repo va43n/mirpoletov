@@ -12,20 +12,20 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+/* body {
   background-color: #f3f3f3;
   scrollbar-width: none;
-}
+} */
 
-html::-webkit-scrollbar {
+/* html::-webkit-scrollbar {
   display: none;
-}
+} */
 
 header {
   position: fixed;
   top: 0;
-  left: 10vw;
-  width: 80vw;
+  left: 10%;
+  width: 80%;
   margin: 0 auto;
   border-radius: 0px 0px 12px 12px;
   background-color: white;
@@ -191,7 +191,7 @@ button:active {
   flex-direction: column;
   margin: 0 auto;
   margin-top: 10px;
-  width: 80vw;
+  width: 80%;
   background-color: white;
   padding: 24px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -246,6 +246,16 @@ button:active {
 
 b {
   font-weight: 600;
+}
+
+@media (orientation: portrait) {
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    background-color: #f3f3f3;
+    scrollbar-width: none;
+  }
 }
 
 @media (orientation: portrait), (max-width: 960px) {

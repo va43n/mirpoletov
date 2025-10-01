@@ -1,5 +1,5 @@
 export const REGIONS_DICTIONARY = {
-        "RU-MOW": {
+    "RU-MOW": {
         name: "Москва",
         id: "RU-MOW",
     },
