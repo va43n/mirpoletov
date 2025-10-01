@@ -390,28 +390,7 @@ def draw_info(info: ParserInfo, data: ParsedData):
         return -1
     
     made = 0
-    if info.shr.date and info.shr.timed and info.shr.flight_time:
-        dated = info.shr.date
-        timed = info.shr.timed
-        flight_time = info.shr.flight_time
-
-        if not (dated.isdecimal() and len(dated) == 6):
-            return -1
-        if not (timed.isdecimal() and len(timed) == 4):
-            return -1
-        if not (flight_time.isdecimal() and len(flight_time) == 4):
-            return -1
-
-        try:
-            datetimed = datetime.datetime(year=int("20" + dated[:2]), month=int(dated[2:4]), day=int(dated[4:6]),
-                                          hour=int(timed[:2]), minute=int(timed[2:4]))
-            flight_time_int = int(flight_time[:2]) * 60 + int(flight_time[2:4])
-            made = 1
-        except:
-            logging.debug("Drawing info: datetime shr trouble")
-            #logging.debug("Drawing info: not right datetimed")
-            #return -1
-            
+    flight_time_int = -1000
     if (info.dep.date and info.dep.time and info.arr.date and info.arr.time and not made):
         dated = info.dep.date
         timed = info.dep.time
@@ -436,6 +415,29 @@ def draw_info(info: ParserInfo, data: ParsedData):
             made = 1
         except:
             logging.debug("Drawing info: datetime arr dep trouble")
+
+    if info.shr.date and info.shr.timed and info.shr.flight_time and (not made or flight_time_int < 0):
+        dated = info.shr.date
+        timed = info.shr.timed
+        flight_time = info.shr.flight_time
+
+        if not (dated.isdecimal() and len(dated) == 6):
+            return -1
+        if not (timed.isdecimal() and len(timed) == 4):
+            return -1
+        if not (flight_time.isdecimal() and len(flight_time) == 4):
+            return -1
+
+        try:
+            datetimed = datetime.datetime(year=int("20" + dated[:2]), month=int(dated[2:4]), day=int(dated[4:6]),
+                                          hour=int(timed[:2]), minute=int(timed[2:4]))
+            flight_time_int = int(flight_time[:2]) * 60 + int(flight_time[2:4])
+            made = 1
+        except:
+            logging.debug("Drawing info: datetime shr trouble")
+            #logging.debug("Drawing info: not right datetimed")
+            #return -1
+    
             
     if not made:
         logging.debug("Drawing info: not right datetime")
@@ -501,6 +503,7 @@ def draw_info(info: ParserInfo, data: ParsedData):
         data.flight_time_min = int(flight_time[:2]) * 60 + int(flight_time[2:])
     """
     if data.flight_time_min == -1000 or data.flight_time_min < 0:
+        # logging.info("Drawing info: time less than 0, sid: {}".format(data.sid))
         logging.debug("Drawing info: no right flight_time")
         return -1
 

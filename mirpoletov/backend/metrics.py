@@ -40,13 +40,13 @@ def empty_days(all_data: list, datetime_min, datetime_max):
     start = time.time()
     date_min = datetime_min.date()
     date_max = datetime_max.date()
-    all_days = (date_max - date_min).days
+    all_days = (date_max - date_min).days + 1
     set_date = set()
     for data in all_data:
         if not isinstance(data, ParsedData):
             logging.info("Metrics: empty days got not ParsedData")
             return -1
-        if date_min < data.datetimed.date() < date_max:
+        if date_min <= data.datetimed.date() <= date_max:
             set_date.add(data.datetimed.date())
 
     logging.info("Metrics: empty days: done in {} sec.".format(time.time() - start))
