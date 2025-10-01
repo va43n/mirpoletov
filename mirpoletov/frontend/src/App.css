@@ -173,6 +173,17 @@ button:active {
   border-radius: 12px;
   transition: all 0.3s ease;
 }
+.controls-container-col-buttons {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 0 auto;
+  padding: 0px 24px;
+  transition: all 0.3s ease;
+}
 .controls-container-row {
   display: flex;
   align-items: center;

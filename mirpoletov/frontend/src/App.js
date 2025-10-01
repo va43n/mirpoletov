@@ -38,6 +38,7 @@ function App() {
 
   const [serverResponse, setServerResponse] = useState(null);
   const [regionsCalculatedData, setRegionsCalculatedData] = useState({});
+  const [json, setJson] = useState(null);
 
   const handleFlightsMetricInterpretation = (metric, isMean) => {
     const parseData = (data) => {
@@ -518,11 +519,42 @@ function App() {
       console.log("Результат:", result);
 
       setServerResponse(result);
+      setJson(
+        {
+          "input":
+          {
+            "regions": regions,
+            "metrics": selectedMetrics,
+            "settings": selectedSettings,
+            "timestamp1": {day: day1, month: month1, year: year1, hour: hour1, minute: minute1},
+            "timestamp2": {day: day2, month: month2, year: year2, hour: hour2, minute: minute2},
+            "uploadedData": uploadedData
+          },
+          "output": result
+        });
     } catch (error) {
       showErrorWindow(`Ошибка при запросе к серверу: "${error.message}".`);
     }
 
   };
+
+  const HandleJSONDownload = () => {
+    const blob = new Blob([JSON.stringify(json, null, 2)], { 
+      type: "application/json" 
+    });
+    
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "data.json";
+    
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    }
 
   const HandleHeaderPositionChange = () => {
     setIsHeaderVisible(!isHeaderVisible);
@@ -646,7 +678,14 @@ function App() {
               </div>
             </div>
             <div className="controls-container-row">
-              <button className="calculateButton" onClick={HandleCalculate}>Рассчитать</button>
+              <div className="controls-container-col-buttons">
+                <button className="calculateButton" onClick={HandleCalculate}>Рассчитать</button>
+              </div>
+              {json && selectedSettings.includes("json") && (
+                <div className="controls-container-col-buttons">
+                  <button onClick={HandleJSONDownload}>Скачать JSON</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -882,10 +921,16 @@ function App() {
                               </>
                             )}
                             {metric === "empty_days" && (
-                              <>
+                              <div className="info-container">
+                                <p className="info-title">{`Информация для метрики: "${METRICS_DICTIONARY[metric].name}" по различным регионам`}</p>
+                                {Object.keys(regionsCalculatedData[metric]).map((region, index) => (
+                                  <div className="chart-container" key={`reg-text-empty_days-${region}-${index}`}>
+                                    <p className="info-subtitle"><b>{`${regionsCalculatedData[metric][region]["name"]}:`}</b></p>
+                                    <div className="info-subtitle">{`Количество нулевых дней по региону ${regionsCalculatedData[metric][region]["name"]} равно ${regionsCalculatedData[metric][region]["num"]}.`}</div>
+                                  </div>
+                                ))}
                                 <></>
-                                <></>
-                              </>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -1055,22 +1100,17 @@ function App() {
                         </>
                       )}
                       {metric === "empty_days" && regionsCalculatedData[metric].length > 1 && (
-                        <div className="info-container" key={`mean-text-empty_days-${index}`}>
-                            <p className="info-title">{`Общая информация по метрике "${METRICS_DICTIONARY[metric].name}" для ${regions.length} регионов:`}</p>
-                            {regionsCalculatedData[metric].map((region, index) => (
-                              <div key={`mean-text-empty_days-${index}`} className="info-subtitle">
-                                {`${regionsCalculatedData[metric][index].num} дней не совершались полеты в`}<b>{` ${regionsCalculatedData[metric][index].name} `}</b>за заданный период.
-                              </div>
-                            ))}
+                        <>
                           {selectedSettings.includes("graphs") && 
-                            <>
+                            <div className="info-container" key={`mean-text-empty_days-${index}`}>
+                              <p className="info-title">{`Общая информация по метрике "${METRICS_DICTIONARY[metric].name}" для ${regions.length} регионов:`}</p>
                               <div className="all-charts">
                                 <Chart type="bar" data={regionsCalculatedData[metric]} title={`Число нулевых дней в ${regions.length} регионах`}></Chart>
                                 <Chart type="pie" data={regionsCalculatedData[metric]}  title={`Число нулевых дней в ${regions.length} регионах`}></Chart>
                               </div>
-                            </>
+                            </div>
                           }
-                        </div>
+                        </>
                       )}
                     </div>
                   ))}
