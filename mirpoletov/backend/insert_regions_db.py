@@ -9,14 +9,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 import psycopg
 
+from config_vars_safe import pass_info, _dbname, _host, _port, _user
+
 
 logging.basicConfig(level=logging.INFO)
-file = open("../../../../../stuff")
+file = open(pass_info)
+del pass_info
 stuff = file.read().strip("\n\r ")
 start = time.time()
 
-params = {"drivername": "postgresql", "host": "192.168.0.200", "port": "5433", "database": "regions", "username": "drones", "password": stuff}
-conn_string = f"postgresql+psycopg://drones:{stuff}@192.168.0.200:5433/regions"
+params = {"drivername": "postgresql", "host": _host, "port": _port, "database": _dbname, "username": _user, "password": stuff}
+conn_string = f"postgresql+psycopg://{_user}:{stuff}@{_host}:{_port}/{_dbname}"
+del _dbname, _host, _port, _user, stuff
 eng = create_engine(conn_string)
 with eng.connect() as conn:
     with conn.begin() as trans:

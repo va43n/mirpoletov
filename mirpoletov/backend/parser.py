@@ -514,7 +514,7 @@ def parse_rows(rows: list[list[str]]):
     parsed_data = []
     for row in rows:
         data = parse_row2025(row, wrong_lines_count)
-        if not isinstance(data, int) or data == 0:
+        if not isinstance(data, int):
             parsed_data.append(data)
     finish = time.time()
     logging.info("Parsing rows: {} sec. Average per row: {} sec.".format(finish - start, (finish - start)/len(rows)))
