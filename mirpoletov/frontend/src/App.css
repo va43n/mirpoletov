@@ -1,7 +1,33 @@
 :root {
   --map-height: 500px;
   --standard-button-size: 200px;
+
+  --main-bg-color: white;
+  --main-text-color: #666;
+  --region-color: #a0d2ff;
+  --outline-color: rgb(42, 77, 107);
+  --hover-color: rgb(105, 172, 231);
+  --region-active-color: #007bff;
+  --main-shadow-color: rgba(0, 0, 0, 0.2);
+  --buttons-shadow-color: rgba(42, 77, 107, 0.4);
+  --tooltip-background-color: rgba(255, 255, 255, 0.8);
+  --back-background: #f3f3f3;
+  --standard-fg: black;
 }
+
+/* [data-theme="dark"] {
+  --main-bg-color: rgb(97, 26, 174);
+  --main-text-color: #FFFFFF;
+  --region-color: rgb(255, 96, 146);
+  --outline-color: rgb(255, 215, 228);
+  --hover-color: rgb(191, 21, 62);
+  --region-active-color: rgb(235, 12, 73);
+  --main-shadow-color: rgba(253, 175, 200, 0.2);
+  --buttons-shadow-color: rgba(254, 167, 194, 0.4);
+  --tooltip-background-color: rgba(208, 205, 237, 0.8);
+  --back-background: rgb(68, 18, 123);
+  --standard-fg: rgb(255, 215, 228);
+} */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -10,12 +36,12 @@
 * {
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+  /* color: var(--standard-fg); */
 }
 
-/* body {
-  background-color: #f3f3f3;
-  scrollbar-width: none;
-} */
+body {
+  background-color: var(--back-background);
+}
 
 /* html::-webkit-scrollbar {
   display: none;
@@ -28,8 +54,8 @@ header {
   width: 80%;
   margin: 0 auto;
   border-radius: 0px 0px 12px 12px;
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background-color: var(--main-bg-color);
+  box-shadow: 0 2px 10px var(--main-shadow-color);
   z-index: 10;
 }
 
@@ -50,7 +76,7 @@ header {
   left: 12vw;
   padding: 2px 4px;
   border-radius: 0px 0px 12px 12px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 2px 10px var(--main-shadow-color);
   z-index: 10;
 }
 
@@ -60,7 +86,7 @@ header {
 
 .header-pos-change-button-text {
   transition: all 0.3s ease;
-  color: rgb(42, 77, 107);
+  color: var(--outline-color);
   font-size: 12px;
 }
 
@@ -75,20 +101,20 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
   outline: none;
-  background-color: #a0d2ff;
-  color: rgb(42, 77, 107);
+  background-color: var(--region-color);
+  color: var(--outline-color);
   user-select: none;
 }
 
 button:hover {
-  background-color: rgb(105, 172, 231);
+  background-color: var(--hover-color);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(42, 77, 107, 0.4);
+  box-shadow: 0 6px 20px var(--buttons-shadow-color);
 }
 
 button:active {
   transform: translateY(0);
-  background-color: #007bff;
+  background-color: var(--region-active-color);
 }
 
 .calculateButton {
@@ -139,16 +165,17 @@ button:active {
   cursor: pointer;
   transition: all 0.3s ease;
   stroke-width: 1;
-  stroke: rgb(42, 77, 107);
+  stroke: var(--outline-color);
+  fill: var(--region-color);
 }
 
 .region:hover {
-  fill: rgb(105, 172, 231);
+  fill: var(--hover-color);
 }
 
 .region.active {
-  fill: #007bff;
-  stroke: rgb(42, 77, 107);
+  fill: var(--region-active-color);
+  stroke: var(--outline-color);
 }
 
 .controls-container {
@@ -167,10 +194,21 @@ button:active {
   justify-content: space-between;
   gap: 15px;
   margin: 0 auto;
-  background-color: white;
+  background-color: var(--main-bg-color);
   padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px var(--main-shadow-color);
   border-radius: 12px;
+  transition: all 0.3s ease;
+}
+.controls-container-col-buttons {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 0 auto;
+  padding: 0px 24px;
   transition: all 0.3s ease;
 }
 .controls-container-row {
@@ -192,9 +230,9 @@ button:active {
   margin: 0 auto;
   margin-top: 10px;
   width: 80%;
-  background-color: white;
+  background-color: var(--main-bg-color);
   padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px var(--main-shadow-color);
   border-radius: 12px;
   gap: 10px;
   transition: all 0.3s ease;
@@ -231,7 +269,7 @@ button:active {
 
 .region-tooltip {
   position: fixed;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--tooltip-background-color);
   color: rgba(102, 102, 102, 0.8);
   padding: 12px 24px;
   border-radius: 12px;
@@ -240,7 +278,7 @@ button:active {
   z-index: 11;
   word-break: break-word;
   width: var(--standard-button-size);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px var(--main-shadow-color);
   transform: translate(0%, -100%);
 }
 
@@ -253,7 +291,7 @@ b {
     display: none;
   }
   body {
-    background-color: #f3f3f3;
+    background-color: var(--back-background);
     scrollbar-width: none;
   }
 }
