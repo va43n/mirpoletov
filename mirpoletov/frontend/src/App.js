@@ -120,22 +120,24 @@ function App() {
     }
 
     if (isMean) {
-      let all_dates = []
-      serverResponse[metric][0].map((date, index) => {
-        const t1 = date[0];
-        const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
+      if (data[key] !== 0) {
+        let all_dates = []
+        serverResponse[metric][0].map((date, index) => {
+          const t1 = date[0];
+          const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
+          
+          const t2 = date[1];
+          const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
         
-        const t2 = date[1];
-        const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
-      
-        all_dates = [...all_dates, {timestamp1: timestamp1, timestamp2: timestamp2}]
-      });
-      const graphicData = [serverResponse[metric][1], all_dates];
+          all_dates = [...all_dates, {timestamp1: timestamp1, timestamp2: timestamp2}]
+        });
+        const graphicData = [serverResponse[metric][1], all_dates];
 
-      setRegionsCalculatedData(prev => ({
-        ...prev,
-        [`${metric}_mean`]: graphicData
-      }));
+        setRegionsCalculatedData(prev => ({
+          ...prev,
+          [`${metric}_mean`]: graphicData
+        }));
+      }
     }
     else {
       const graphicData = parseData(serverResponse[metric]);
