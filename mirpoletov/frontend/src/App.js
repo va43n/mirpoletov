@@ -98,23 +98,25 @@ function App() {
     const parseData = (data) => {
       let numbers = [];
       let info = {};
-      Object.keys(data).map((key, index) => {
-        if (data[key] !== 0) {
-          numbers = [...numbers, {name: REGIONS_DICTIONARY[key].name, num: data[key][1]}];
-        
-          let all_dates = []
-          data[key][0].map((date, index) => {
-            const t1 = date[0];
-            const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
-            
-            const t2 = date[1];
-            const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
+      if (data !== 0) {
+        Object.keys(data).map((key, index) => {
+          if (data[key] !== 0) {
+            numbers = [...numbers, {name: REGIONS_DICTIONARY[key].name, num: data[key][1]}];
           
-            all_dates = [...all_dates, {name: REGIONS_DICTIONARY[key].name, timestamp1: timestamp1, timestamp2: timestamp2}]
-          });
-          info[REGIONS_DICTIONARY[key].name] = [all_dates, data[key][1]];
-        }
-      });
+            let all_dates = []
+            data[key][0].map((date, index) => {
+              const t1 = date[0];
+              const timestamp1 = `${t1.day}.${t1.month}.${t1.year} ${t1.hour}:00`;
+              
+              const t2 = date[1];
+              const timestamp2 = `${t2.day}.${t2.month}.${t2.year} ${t2.hour}:00`;
+            
+              all_dates = [...all_dates, {name: REGIONS_DICTIONARY[key].name, timestamp1: timestamp1, timestamp2: timestamp2}]
+            });
+            info[REGIONS_DICTIONARY[key].name] = [all_dates, data[key][1]];
+          }
+        });
+      }
 
       return [numbers, info];
     }
@@ -503,7 +505,7 @@ function App() {
       showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно выбрав функцию загрузки данных из файла в базу, но при этом не прикрепили файл с данными. Загрузите файл в соответствующее поле или отмените загрузку данных в базу, чтобы произвести рассчет.`);
       return;
     }
-    if (regions.length === 0 && !uploadedData) {
+    if (regions.length === 0 && !selectedSettings.includes("file")) {
       showErrorWindow(`Вы нажали на кнопку "Рассчитать", предварительно не выбрав регионы для обработки. Выберите один или несколько регионов с помощью интерактивной карты или поля поиска, или же загрузите файл с данными в соответствующее поле, чтобы произвести рассчет.`);
       return;
     }
@@ -825,7 +827,7 @@ function App() {
                                     <p className="info-subtitle">Медиана: {regionsCalculatedData[metric][1].toFixed(2)}</p>
                                   </div>
                                 )}
-                                {metric === "peak_load_mean" && (
+                                {metric === "peak_load_mean" && regionsCalculatedData[metric] !== 0 && (
                                   <div className="chart-container" key={`mean-text-${index}`}>
                                     <p className="info-subtitle"><b>{`${METRICS_DICTIONARY[metric.slice(0, -5)].name}`}</b>:</p>
                                     <p className="info-subtitle">Число полетов: {regionsCalculatedData[metric][0]}</p>
