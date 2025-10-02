@@ -245,7 +245,6 @@ function App() {
           for (let i = 0; i < data.length; i++) {
             result = [...result, {"name": hours[(startHour + i) % hours.length], "num": data[i]}];
           }
-          console.log(result);
         }
       }
       else {
