@@ -522,6 +522,7 @@ def parse_rows(rows: list[list[str]]):
     finish = time.time()
     logging.info("Parsing rows: {} sec. Average per row: {} sec.".format(finish - start, (finish - start)/len(rows)))
     logging.info("Parsing rows: {} wrong lines".format(wrong_lines_count[0]))
+    # logging.info("Length parsed data: {}".format(len(parsed_data)))
     return parsed_data
 
                  

@@ -47,6 +47,11 @@ def compute_regions_types(parsed_data: list, regions, types: dict, completed_dat
     logging.info("Completing data: converted into p_gdf: {} sec.".format(converter_time - got_points_time))
 
     joined_regions = gpd.sjoin(regions, points_gdf, how="inner")
+    regins = joined_regions["index_right"].array
+    # print(joined_regions)
+    # for i in range(len(parsed_data)):
+        # if i not in regins:
+            # print(parsed_data[i].longd, parsed_data[i].latd, parsed_data[i].longa, parsed_data[i].lata)
     join_time = time.time()
     logging.info("Completing data: joined data: {} sec.".format(join_time - converter_time))
     ids_left = joined_regions.index.array
