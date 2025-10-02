@@ -120,7 +120,7 @@ function App() {
     }
 
     if (isMean) {
-      if (data[key] !== 0) {
+      if (serverResponse[metric] !== 0) {
         let all_dates = []
         serverResponse[metric][0].map((date, index) => {
           const t1 = date[0];
@@ -138,6 +138,7 @@ function App() {
           [`${metric}_mean`]: graphicData
         }));
       }
+
     }
     else {
       const graphicData = parseData(serverResponse[metric]);
