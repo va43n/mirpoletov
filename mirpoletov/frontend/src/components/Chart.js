@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter, RadarChart, Radar, PolarAngleAxis, PolarRadiusAxis, PolarGrid, Text } from "recharts";
 import html2canvas from "html2canvas";
 
-import { useInView } from 'react-intersection-observer';
+import { useInView } from "react-intersection-observer";
 
 import "./Chart.css"
 
@@ -12,7 +12,7 @@ const Chart = ({
 }) => {
   const { ref, inView } = useInView({
     triggerOnce: false,
-    rootMargin: '100px 0px',
+    rootMargin: "100px 0px",
   });
 
   const generateColor = (index, total, saturation = 50, lightness = 55, alpha = 1) => {
