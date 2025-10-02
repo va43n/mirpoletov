@@ -254,7 +254,7 @@ function App() {
           if (data[key].length > 1) {
             hours_dict["name"] = REGIONS_DICTIONARY[key].name;
             for (let i = 0; i < data[key].length; i++) {
-              hours_dict[hours[(startHour + i) % hours.length]] = data[key][i];
+              hours_dict[i] = data[key][i];
             }
 
             result = [...result, hours_dict];
@@ -266,6 +266,7 @@ function App() {
     }
 
     const graphicData = parseData(serverResponse[metric]);
+    console.log(graphicData);
     if (isMean) {
       setRegionsCalculatedData(prev => ({
         ...prev,
