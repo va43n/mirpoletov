@@ -79,6 +79,7 @@ def process_metric(metric_name, data, all_regions, min_datetime, max_datetime, r
     return result
 
 def process_metrics(all_data, settings, metrics, regions, all_regions, min_datetime, max_datetime):
+    logging.basicConfig(level=logging.INFO)
     mean_regions = {mean_string: all_data}
     regions_dict = {}
     ret = make_regions_dict(all_data, regions, regions_dict)
@@ -123,8 +124,8 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
     try:
         if filebytes and file_setting in settings:
             try:
-                # bytes_real = BytesIO(filebytes)
-                headers, rows = read_excel_calamine(filebytes)
+                bytes_real = BytesIO(filebytes)
+                headers, rows = read_excel_calamine(bytes_real)
             except Exception as e:
                 logging.info("Trouble with processing file, {}".format(e))
                 return {failed_string: "Возникла ошибка при обработке переданного файла"}
@@ -153,10 +154,16 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
                     count_inserted = insert_data_db(completed_data, conn)
                     if isinstance(count_inserted, int) and count_inserted == -1:
                         logging.info("Trouble with inserting into db")
+                        conn.rollback()
+                        conn.close()
                         return {failed_string: "Возникла ошибка при вставке данных в базу данных"}
                 except Exception as e:
                     logging.info("Trouble with inserting into db: {}".format(e))
+                    conn.rollback()
+                    conn.close()
                     return {failed_string: "Возникла непредвиденная ошибка при вставке данных в базу данных"}
+                conn.commit()
+                conn.close()
             try:
                 all_data = []
                 duplicates, self_duplicates = find_duplicates(completed_data, [], all_data)
@@ -189,6 +196,9 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
             for data in all_data:
                 regions_set.add(data.region)
             regions_ints = list(regions_set)
+            if not regions_ints:
+                logging.info("No regions in file")
+                return {failed_string: "В файле нет данных с регионами"}
             """
             try:
                 regions_ints = []
@@ -205,6 +215,9 @@ def process_data(settings, metrics, conninfo, regions, all_regions, types, min_d
         elif file_setting in settings and not filebytes:
             return {failed_string: "Не был предоставлен файл для обработки"}
         else:
+            if not regions:
+                logging.info("No regions sent")
+                return {failed_string: "Не было послано регионов"}
             try:
                 regions_ints = []
                 wrong_regions = turn_abbrs_to_regions(regions, all_regions, regions_ints)

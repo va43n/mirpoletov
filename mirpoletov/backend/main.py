@@ -175,7 +175,7 @@ def calculate_client_input(
         if uploadedData and file_setting in settings:
             try:
                 #filebytes = uploadedData.file.read()
-                filebytes = uploadedData.file
+                filebytes = uploadedData.file.read()
             except Exception as e:
                 logging.info("Trouble with file: {}".format(e))
                 content = {failed_string: "Возникла ошибка при чтении переданного файла"}
@@ -184,7 +184,7 @@ def calculate_client_input(
             filebytes = 0
         
         try:
-            content = process_data(settings, metrics, conninfo, regions, all_regions, types, min_datetime, max_datetime, filebytes)
+            content = processes_pool.apply(process_data, (settings, metrics, conninfo, regions, all_regions, types, min_datetime, max_datetime, filebytes))
         except Exception as e:
             logging.info("Trouble wow: {}".format(e))
             logging.info(e.args)
