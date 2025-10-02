@@ -35,8 +35,8 @@ def empty_days(all_data: list, datetime_min, datetime_max):
         logging.info("Metrics: empty_days got wrong type of data")
         return -1
     if len(all_data) == 0:
-        return ((datetime.datetime(year=datetime_max.year, month=datetime_max.month, day=datetime_max.day, hour=datetime_max.hour) 
-                 - datetime.datetime(year=datetime_min.year, month=datetime_min.month, day=datetime_min.day, hour=datetime_min.hour)).total_seconds() // 3600 + 1)  
+        return ((datetime.datetime(year=datetime_max.year, month=datetime_max.month, day=datetime_max.day) 
+                 - datetime.datetime(year=datetime_min.year, month=datetime_min.month, day=datetime_min.day)).days + 1)  
     start = time.time()
     date_min = datetime_min.date()
     date_max = datetime_max.date()
